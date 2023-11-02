@@ -47,8 +47,8 @@ def compute_wigner_seitz_location_2d(dx, a, b):
     db = dx / np.linalg.norm(b)
     region = []
 
-    for i in np.linspace(-3,3,6/da):
-        for j in range(-3,3,6/db):
+    for i in np.linspace(-3,3,int(6/da)):
+        for j in np.linspace(-3,3,int(6/db)):
             region.append(i*a + j*b)
     
     wigner_seitz = []
