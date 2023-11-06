@@ -1,4 +1,6 @@
 import numpy as np
+from scipy import linalg as la
+from scipy import constants
 
 def compute_reciprocal_lattice_vectors_2D(a_1: np.ndarray, a_2: np.ndarray):
     """Calculates the two reciprocal lattice vectors for a 2D lattice.
@@ -61,3 +63,26 @@ def compute_wigner_seitz_location_2d(dx, a, b):
 
     return wigner_seitz
 
+def compute_time_evolution_operator(H, t, dt):
+    """Computes the time evolution operator for a general hamiltonian.
+    
+    Parameters
+    ----------
+    H: function
+        The (time-dependent) hamiltonian for which to calculate the time
+        evolution.
+    t: float
+        The time at which to calculate the evolution.
+    dt: float
+        The time steps used in calculating the operator.
+
+    Returns
+    -------
+    U: numpy.array
+        The time evolution operator from H at time t.
+    """
+    U = np.identity(H(0).shape[0]) # U has the same dimension as H
+    times = np.linspace(0,t,int(t/dt)+1)
+    for i in range(len(times)):
+        U = np.matmul(la.expm(-1j*H(times[i])*dt), U)
+    return U
