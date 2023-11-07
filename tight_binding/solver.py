@@ -114,6 +114,7 @@ class driven_bandstructure2D:
         a_2: np.ndarray,
         n: int,
         bands: int=3,
+        lower_energy: float=-np.pi
     ):
         self.hamiltonian = hamiltonian
         self.a_1 = a_1
@@ -123,6 +124,7 @@ class driven_bandstructure2D:
         self.n = n
         self.T = period
         self.dt = dt
+        self.lower_energy = lower_energy
 
     def compute_bandstructure(self):
         """Computes the bandstructure for one reciprocal unit cell."""
@@ -144,7 +146,12 @@ class driven_bandstructure2D:
                     return self.hamiltonian(k,t)
                 U = compute_time_evolution_operator(H, self.T, self.dt)
                 eigenvalues, eigenvectors = np.linalg.eig(U)
-                eigenexp = np.log(eigenvalues) / (1j*self.T)
+                eigenexp = np.real(np.log(eigenvalues) / (1j*self.T))
+                # converting to the right quasienergy range
+                eigenexp = (eigenexp 
+                            + 2*np.pi
+                            *((self.lower_energy/np.pi - eigenexp/np.pi) / 2
+                              + 1).astype(int))
                 ind = np.argsort(eigenexp) #sorting the energies
                 eigenexp = eigenexp[ind]
                 eigenvectors = eigenvectors[:,ind]
