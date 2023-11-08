@@ -146,12 +146,13 @@ class driven_bandstructure2D:
                     return self.hamiltonian(k,t)
                 U = compute_time_evolution_operator(H, self.T, self.dt)
                 eigenvalues, eigenvectors = np.linalg.eig(U)
-                eigenexp = np.real(np.log(eigenvalues) / (1j*self.T))
+                eigenexp = np.real(np.log(eigenvalues) / (-1j*self.T))
                 # converting to the right quasienergy range
                 eigenexp = (eigenexp 
                             + 2*np.pi
-                            *((self.lower_energy/np.pi - eigenexp/np.pi) / 2
-                              + 1).astype(int))
+                            *np.floor(((self.lower_energy/np.pi 
+                                        - eigenexp/np.pi) / 2
+                              + 1)))
                 ind = np.argsort(eigenexp) #sorting the energies
                 eigenexp = eigenexp[ind]
                 eigenvectors = eigenvectors[:,ind]
@@ -202,17 +203,47 @@ class driven_bandstructure2D:
 
 
 
-    def plot_bandstructure(self, save):
-        "Plots and saves the bandstructure." 
-        E = np.transpose(self.energies, (2,0,1))
+    def plot_bandstructure(self, 
+                           save, 
+                           kxmin=-np.pi, 
+                           kxmax=np.pi, 
+                           kymin=-np.pi, 
+                           kymax=np.pi):
+        "Plots and saves the bandstructure."
+        # Getting the correct region
+        span = False
+        reciprocal_vectors = 0
+        while not span:
+            reciprocal_vectors += 1
+            beta_1 = np.linspace(-reciprocal_vectors,
+                                 reciprocal_vectors,
+                                 2*reciprocal_vectors*self.n)
+            beta_2 = np.linspace(-reciprocal_vectors,
+                                 reciprocal_vectors,
+                                 2*reciprocal_vectors*self.n)
+            beta_1, beta_2 = np.meshgrid(beta_1, beta_2, indexing='ij')
+            kx = beta_1*self.b_1[0] + beta_2*self.b_2[0]
+            ky = beta_1*self.b_1[1] + beta_2*self.b_2[1]
+            span = ((np.min(kx) < kxmin) and (np.max(kx) > kxmax) 
+                    and (np.min(ky) < kymin) and (np.max(ky) > kymax))
+        # Specifying the indices of the required energies in self.energies
+        i = (self.n*(beta_1%1)).astype(int)
+        j = (self.n*(beta_2%1)).astype(int)
+        energies_expanded = self.energies[i,j]
+        E = np.transpose(energies_expanded, (2,0,1))
+        
+        # Masking the data we do not want to plot
+        E[:, (kx>kxmax) | (kx<kxmin) | (ky>kymax) | (ky<kymin)] = np.nan
         
         fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
         # Plot the surface.
-        surf1 = ax.plot_surface(self.kx, self.ky, E[0], cmap=cm.coolwarm,
-                            linewidth=0, antialiased=True)
-        surf2 = ax.plot_surface(self.kx, self.ky, E[1], cmap=cm.coolwarm,
-                            linewidth=0, antialiased=True)
-        surf3 = ax.plot_surface(self.kx, self.ky, E[2], cmap=cm.coolwarm,
-                            linewidth=0, antialiased=True)
+        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.coolwarm,
+                            linewidth=0)
+        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.coolwarm,
+                            linewidth=0)
+        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.coolwarm,
+                            linewidth=0)
+        ax.set_xlim(kxmin,kxmax)
+        ax.set_ylim(kymin,kymax)
         plt.savefig(save)
         plt.show()
