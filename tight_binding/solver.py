@@ -187,11 +187,11 @@ class driven_bandstructure2D:
         self.dt = dt
         self.lower_energy = lower_energy
 
-    def compute_energy_blochvector(self, k):
+    def compute_energy_blochvector(self, k, technique='trotter'):
         """Computes the quasienergies and blochvectors at a certain point."""
         def H(t):
             return self.hamiltonian(k,t)
-        U = compute_time_evolution_operator(H, self.T, self.dt)
+        U = compute_time_evolution_operator(H, self.T, self.dt, technique)
         eigenvalues, eigenvectors = np.linalg.eig(U)
         eigenexp = np.real(np.log(eigenvalues) / (-1j))
         # converting to the right quasienergy range
@@ -206,7 +206,7 @@ class driven_bandstructure2D:
         eigenvectors = eigenvectors.transpose(1,0)
         return eigenexp, eigenvectors
     
-    def compute_bandstructure(self, n_steps):
+    def compute_bandstructure(self, n_steps, technique='trotter'):
         """Computes the bandstructure for one reciprocal unit cell."""
         # Creating the required grids mapping from points in reciprocal space
         alpha_1 = np.linspace(0,1,n_steps)
@@ -222,7 +222,8 @@ class driven_bandstructure2D:
         for i in range(alpha_1.shape[0]):
             for j in range(alpha_1.shape[1]):
                 k = np.array([kx[i,j], ky[i,j]])
-                eigenexp, eigenvectors = self.compute_energy_blochvector(k)
+                (eigenexp, 
+                eigenvectors) = self.compute_energy_blochvector(k, technique)
                 for band in range(len(eigenexp)):
                     energies[i,j,band] = eigenexp[band]
                     blochvectors[i,j,band] = eigenvectors[band]

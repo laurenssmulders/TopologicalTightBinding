@@ -63,7 +63,7 @@ def compute_wigner_seitz_location_2d(dx, a, b):
 
     return wigner_seitz
 
-def compute_time_evolution_operator(H, t, dt):
+def compute_time_evolution_operator(H, t, dt, technique='trotter'):
     """Computes the time evolution operator for a general hamiltonian.
     
     Parameters
@@ -81,8 +81,33 @@ def compute_time_evolution_operator(H, t, dt):
     U: numpy.array
         The time evolution operator from H at time t.
     """
-    U = np.identity(H(0).shape[0]) # U has the same dimension as H
-    times = np.linspace(0,t,int(t/dt)+1)
-    for i in range(len(times)):
-        U = np.matmul(la.expm(-1j*H(times[i])*dt), U)
+    if technique == 'trotter':
+        U = np.identity(H(0).shape[0]) # U has the same dimension as H
+        times = np.linspace(0,t,int(t/dt)+1)
+        for i in range(len(times)):
+            U = np.matmul(la.expm(-1j*H(times[i])*dt), U)
+
+    elif technique == 'runge-kutta':
+        times = np.linspace(0,t,int(t / dt), endpoint=False)
+        U = np.identity(H[0].shape[0])
+        def f(time, operator):
+            return -1j*np.matmul(H(time),operator)
+        for i in range(len(times)):
+            k_1 = f(times[i],U)
+            k_2 = f(times[i] + dt / 2, U + dt * k_1 / 2)
+            k_3 = f(times[i] + dt / 2, U + dt * k_2 / 2)
+            k_4 = f(times[i] + dt, U + dt * k_3)
+            U = U + dt / 6 * (k_1 + 2 * k_2 + 2 * k_3 + k_4)
+    else:
+        print('Invalid technique.')
+    
+    # Checking the normalisation
+    norm = np.matmul(np.conjugate(np.transpose(U, (1,0))), U)
+    norm_error = np.trace(norm) - U.shape[0]
+    if abs(norm_error) > 1e-14:
+        print('High normalisation error!: {norm_error}'.format(
+            norm_error=norm_error))
+
     return U
+        
+
