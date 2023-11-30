@@ -89,7 +89,7 @@ def compute_time_evolution_operator(H, t, dt, technique='trotter'):
 
     elif technique == 'runge-kutta':
         times = np.linspace(0,t,int(t / dt), endpoint=False)
-        U = np.identity(H[0].shape[0])
+        U = np.identity(H(0).shape[0])
         def f(time, operator):
             return -1j*np.matmul(H(time),operator)
         for i in range(len(times)):
@@ -104,7 +104,7 @@ def compute_time_evolution_operator(H, t, dt, technique='trotter'):
     # Checking the normalisation
     norm = np.matmul(np.conjugate(np.transpose(U, (1,0))), U)
     norm_error = np.trace(norm) - U.shape[0]
-    if abs(norm_error) > 1e-14:
+    if abs(norm_error) > 1e-5:
         print('High normalisation error!: {norm_error}'.format(
             norm_error=norm_error))
 

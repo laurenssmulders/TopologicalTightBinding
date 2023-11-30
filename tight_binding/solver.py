@@ -58,6 +58,41 @@ class static_bandstructure2D:
         self.ky = ky
         self.energies = energies
         self.blochvectors = blochvectors
+
+    def calculate_zak_phase(self, 
+                            direction, 
+                            band, 
+                            start, 
+                            path_length, 
+                            n_steps):
+        """Calculates the zak phase along a given direction for a given band."""
+        # direction and start in terms of (beta1, beta2) with d = beta1*b1 + beta2*b2
+        # path length in terms of how many times to repeat the direction vector
+        path_steps = np.linspace(0,1,n_steps)
+        path_beta1 = (start[0] + path_steps * direction[0] * path_length) % 1
+        path_beta2 = (start[1] + path_steps * direction[1] * path_length) % 1
+        path_kx = path_beta1 * self.b_1[0] + path_beta2 * self.b_2[0]
+        path_ky = path_beta1 * self.b_1[1] + path_beta2 * self.b_2[1]
+        path_blochvectors = np.zeros([len(path_steps), self.bands], 
+                                     dtype='complex')
+        
+        for i in range(len(path_steps)):
+            k = np.array([path_kx[i], path_ky[i]])
+            _, blochvector = self.compute_energy_blochvector(k)
+            path_blochvectors[i] = blochvector[band]
+        
+        zak_phase = 1
+        for i in range(len(path_steps) - 1):
+            zak_phase = (zak_phase 
+                         * np.inner(path_blochvectors[i], 
+                                    path_blochvectors[(i+1) 
+                                                      % len(path_steps)]))
+
+        zak_phase = (np.inner(path_blochvectors[0], path_blochvectors[-1])
+                    / zak_phase)
+        zak_phase = 1j*np.log(zak_phase)
+        return zak_phase
+    
     
     def set_gauge(self):
         for band in range(self.bands):
@@ -155,14 +190,27 @@ class static_bandstructure2D:
         
         fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
         # Plot the surface.
-        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.coolwarm,
+        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.spring,
                             linewidth=0)
-        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.coolwarm,
+        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.summer,
                             linewidth=0)
-        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.coolwarm,
+        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.winter,
                             linewidth=0)
+        
+        tick_values = np.linspace(-4,4,9) * np.pi / 2
+        tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
+        ax.set_xticks(tick_values)
+        ax.set_xticklabels(tick_labels)
+        ax.set_yticks(tick_values)
+        ax.set_yticklabels(tick_labels)
         ax.set_xlim(kxmin,kxmax)
         ax.set_ylim(kymin,kymax)
+        ax.set_xlim(kxmin,kxmax)
+        ax.set_ylim(kymin,kymax)
+        ax.set_xlabel('$k_x$')
+        ax.set_ylabel('$k_y$')
+        ax.grid(False)
+        ax.set_box_aspect([1, 1, 1.2])
         plt.savefig(save)
         plt.show()
 
@@ -239,25 +287,84 @@ class driven_bandstructure2D:
     def calculate_zak_phase(self, 
                             direction, 
                             band, 
-                            k_start, 
+                            start, 
                             path_length, 
-                            n_steps):
+                            n_steps,
+                            offsets,
+                            technique='trotter'):
         """Calculates the zak phase along a given direction for a given band."""
-        path_steps = np.linspace(0,1,n_steps,endpoint=False)
-        path_k = np.zeros([len(path_steps), 2])
-        for i in path_k.shape[0]:
-            path_k[i] = (k_start + path_length * path_steps[i]
-                         * direction / np.linalg.norm(direction))
-        path_blochvectors = np.zeros([len(path_steps), self.bands])
+        # direction and start in terms of (beta1, beta2) with d = beta1*b1 + beta2*b2
+        # path length in terms of how many times to repeat the direction vector
+        def offset_matrix(k):
+            diagonal = np.zeros((len(offsets),), dtype='complex')
+            for i in range(len(diagonal)):
+                diagonal[i] = np.exp(-1j * np.vdot(k, offsets[i]))
+            matrix = np.diag(diagonal)
+            return matrix
+        
+        path_steps = np.linspace(0,1,n_steps)
+        path_beta1 = (start[0] + path_steps * direction[0] * path_length) % 1
+        path_beta2 = (start[1] + path_steps * direction[1] * path_length) % 1
+        path_kx = path_beta1 * self.b_1[0] + path_beta2 * self.b_2[0]
+        path_ky = path_beta1 * self.b_1[1] + path_beta2 * self.b_2[1]
+        path_blochvectors = np.zeros([len(path_steps), self.bands], 
+                                     dtype='complex')
+    
         for i in range(len(path_steps)):
-            _, path_blochvectors[i] = self.compute_energy_blochvector(path_k[i])
-        zak_phase = 1 + 0j
+            k = np.array([path_kx[i], path_ky[i]])
+            _, blochvectors = self.compute_energy_blochvector(k,technique)
+            path_blochvectors[i] = np.matmul(offset_matrix(k),blochvectors[band])
+        
+        product = 1
+        for i in range(len(path_steps) - 1):
+            product = product * np.vdot(path_blochvectors[i], 
+                                        path_blochvectors[i+1])
+
+        zak_phase = 1j * np.log(product)    
+        return zak_phase
+    
+    def calculate_zak_phase_new(self, 
+                            direction, 
+                            band, 
+                            start, 
+                            path_length, 
+                            n_steps,
+                            offsets,
+                            technique='trotter'):
+        """Calculates the zak phase along a given direction for a given band."""
+        # direction and start in terms of (beta1, beta2) with d = beta1*b1 + beta2*b2
+        # path length in terms of how many times to repeat the direction vector
+        path_steps = np.linspace(0,1,n_steps)
+        path_beta1 = (start[0] + path_steps * direction[0] * path_length) % 1
+        path_beta2 = (start[1] + path_steps * direction[1] * path_length) % 1
+        path_kx = path_beta1 * self.b_1[0] + path_beta2 * self.b_2[0]
+        path_ky = path_beta1 * self.b_1[1] + path_beta2 * self.b_2[1]
+        path_blochvectors = np.zeros([len(path_steps), self.bands], 
+                                     dtype='complex')
+        
+        #Calculating the offset matrix
+        dk = np.array([path_kx[-1],path_ky[-1]]) - np.array([path_kx[0], path_ky[0]])
+        diagonal = np.zeros(len(offsets,), dtype='complex')
+        for i in range(len(diagonal)):
+            diagonal[i] = np.exp(-1j * np.vdot(dk, offsets[i]))
+        offset_matrix = np.diag(diagonal)
+    
         for i in range(len(path_steps)):
-            zak_phase = (zak_phase 
-                         * np.inner(path_blochvectors[i], 
-                                    path_blochvectors[(i+1) 
-                                                      % len(path_steps)]))
-        zak_phase = 1j*np.log(zak_phase)
+            k = np.array([path_kx[i], path_ky[i]])
+            _, blochvectors = self.compute_energy_blochvector(k,technique)
+            path_blochvectors[i] = blochvectors[band]
+        
+        product = 1
+        for i in range(len(path_steps) - 2):
+            product = product * np.vdot(path_blochvectors[i], 
+                                        path_blochvectors[i+1])
+        
+        product = product * np.vdot(path_blochvectors[-2], 
+                                    np.matmul(offset_matrix, 
+                                              path_blochvectors[-1]))
+        
+
+        zak_phase = 1j * np.log(product)    
         return zak_phase
         
 
@@ -358,11 +465,11 @@ class driven_bandstructure2D:
         
         fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
         # Plot the surface.
-        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.coolwarm,
+        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.spring,
                             linewidth=0)
-        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.coolwarm,
+        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.summer,
                             linewidth=0)
-        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.coolwarm,
+        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.winter,
                             linewidth=0)
         tick_values = np.linspace(-4,4,9) * np.pi / 2
         tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
@@ -375,5 +482,9 @@ class driven_bandstructure2D:
         ax.set_zlim(self.lower_energy, self.lower_energy + 2*np.pi)
         ax.set_xlim(kxmin,kxmax)
         ax.set_ylim(kymin,kymax)
+        ax.set_xlabel('$k_x$')
+        ax.set_ylabel('$k_y$')
+        ax.grid(False)
+        ax.set_box_aspect([1, 1, 1.2])
         plt.savefig(save)
         plt.show()
