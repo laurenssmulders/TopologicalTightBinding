@@ -102,11 +102,11 @@ def kagome_hamiltonian_driven(delta_a,
     def H(k,t):
         hamiltonian = np.array([[delta_a, 
                                  -2*J*np.cos(np.vdot(k + A(t),d_ba)), 
-                                 -2*J*np.cos(np.vdot(k - A(t),d_ca))],
+                                 -2*J*np.cos(np.vdot(k + A(t),d_ca))],
                                 [-2*J*np.cos(np.vdot(k + A(t),d_ab)), 
                                  delta_b, 
                                  -2*J*np.cos(np.vdot(k + A(t),d_cb))],
-                                [-2*J*np.cos(np.vdot(k - A(t),d_ac)), 
+                                [-2*J*np.cos(np.vdot(k + A(t),d_ac)), 
                                  -2*J*np.cos(np.vdot(k + A(t),d_bc)), 
                                  delta_c]]) 
         return hamiltonian
