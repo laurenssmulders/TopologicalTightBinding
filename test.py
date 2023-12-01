@@ -7,11 +7,15 @@ import numpy as np
 
 a_1 = np.transpose(np.array([[1,0]]))
 a_2 = np.transpose(np.array([[0.5, 0.5*3**0.5]]))
-r_a = np.transpose(np.array([[0,0]]))
-r_b = a_1 / 2
-r_c = a_2 / 2
+a_3 = a_2 - a_1
+r_a = a_3 / 2
+r_b = a_2 / 2
+r_c = a_1 / 2
 offsets = np.array([r_a, r_b, r_c])
 
+start = np.transpose(np.array([[0,0]]))
+end = np.transpose(np.array([[1,0]]))
+
 H = kagome_hamiltonian_driven(0,3,-3,1,1,2,0,6,0)
-energies, blochvectors = compute_bandstructure2D(H,a_1,a_2,100,6,50,-np.pi)
-plot_bandstructure2D(energies, a_1, a_2, 'test.png', -1.4*np.pi, 1.4*np.pi, -1.4*np.pi, 1.4*np.pi)
+zak_phases = compute_zak_phase(H, a_1, a_2, offsets, start, end, 100, 6, 100, -np.pi)
+print(zak_phases / np.pi)

@@ -15,6 +15,7 @@ def compute_zak_phase(hamiltonian,
                       omega=0, 
                       num_steps=0, 
                       lowest_quasi_energy=-np.pi, 
+                      enforce_real=True,
                       method='trotter', 
                       regime='driven'):
     """Computes the Zak phase along a path from start to end.
@@ -42,6 +43,8 @@ def compute_zak_phase(hamiltonian,
         The number of steps to use in the calculation of the time evolution
     lowest_quasi_energy: float
         The lower bound of the 2pi interval in which to give the quasi energies
+    enforce_real: bool
+        Whether or not to force the blochvectors to be real
     method: str
         The method for calculating the time evolution: trotter or Runge-Kutta
     regime: str
@@ -58,11 +61,13 @@ def compute_zak_phase(hamiltonian,
     elif regime == 'driven':
         dim = hamiltonian(np.transpose(np.array([[0,0]])),0).shape[0]
     
-    def offset_matrix(k):
-        diagonal = np.zeros((dim,), dtype= 'complex')
-        for i in range(dim):
-            diagonal[i] = np.exp(1j*np.vdot(k,offsets[i]))
-        return np.diag(diagonal)
+    #def offset_matrix(k):
+        #diagonal = np.zeros((dim,), dtype= 'complex')
+        #for i in range(dim):
+            #diagonal[i] = np.exp(1j*np.vdot(k,offsets[i]))
+        #return np.diag(diagonal)
+    
+
     
     # Parametrizing the path
     x = np.linspace(0,1,num_points) # array what fraction of the path we're on
@@ -71,17 +76,26 @@ def compute_zak_phase(hamiltonian,
     alpha_2 = start[1,0] + x * d[1,0]
     kx = alpha_1 * b_1[0,0] + alpha_2 * b_2[0,0]
     ky = alpha_1 * b_1[1,0] + alpha_2 * b_2[1,0]
+
+    dk = np.transpose(np.array([kx[-1], ky[-1]]))
+    diagonal = np.zeros((dim,), dtype='complex')
+    for i in range(dim):
+        diagonal[i] = np.exp(1j*np.vdot(dk,offsets[i]))
+    offset_matrix = np.diag(diagonal)
+    
     # Calculating the blochvectors along the path
     blochvectors = np.zeros((num_points,dim,dim), dtype='complex')
     for i in range(num_points):
         k = np.transpose(np.array([[kx[i],ky[i]]]))
-        S = offset_matrix(k)
+        #S = offset_matrix(k)
         _, eigenvectors = compute_eigenstates(hamiltonian, k, omega, 
                                                  num_steps, lowest_quasi_energy,
-                                                 method, regime)
-        for j in range(dim):
-            eigenvectors[:,j] = np.dot(S, eigenvectors[:,j])
+                                                 enforce_real, method, regime)
+        #for j in range(dim):
+            #eigenvectors[:,j] = np.dot(S, eigenvectors[:,j])
         blochvectors[i] = eigenvectors
+
+    blochvectors[-1] = np.dot(offset_matrix, blochvectors[i])
     # Enforcing periodic gauge
     #blochvectors[-1] = blochvectors[0]
     # Calculating the Zak phases from the blochvectors
@@ -95,4 +109,3 @@ def compute_zak_phase(hamiltonian,
         zak_phases[band] = 1j*np.log(np.prod(overlaps[:,band]))
     
     return zak_phases
-    

@@ -70,6 +70,7 @@ def compute_eigenstates(hamiltonian,
                         omega=0, 
                         num_steps=0,
                         lowest_quasi_energy=-np.pi,
+                        enforce_real=True,
                         method='trotter', 
                         regime='driven'):
     """Computes the eigenstates and energies for a static or driven bloch 
@@ -88,6 +89,8 @@ def compute_eigenstates(hamiltonian,
         The number of steps to use in the calculation of the time evolution
     lowest_quasi_energy: float
         The lower bound of the 2pi interval in which to give the quasi energies
+    enforce_real: bool
+        Whether or not to force the blochvectors to be real
     method: str
         The method for calculating the time evolution: trotter or Runge-Kutta
     regime: str
@@ -104,6 +107,7 @@ def compute_eigenstates(hamiltonian,
     if regime == 'static':
         H = hamiltonian(k)
         energies, blochvectors = np.linalg.eig(H)
+        dim = H.shape[0]
     
     elif regime == 'driven':
         U = compute_time_evolution(hamiltonian, k, 0, 2*np.pi/omega, num_steps, 
@@ -117,10 +121,16 @@ def compute_eigenstates(hamiltonian,
         energies = (energies + 2*np.pi*np.floor((lowest_quasi_energy-energies) 
                                                 / (2*np.pi) + 1))
         blochvectors = eigenvectors
+        dim = U.shape[0]
 
     else:
         print('Enter a valid regime')
-    
+    #Optionally enforcing reality
+    if enforce_real:
+        for i in range(dim):
+            phi = 0.5*np.imag(np.log(np.inner(blochvectors[:,i], 
+                                          blochvectors[:,i])))
+            blochvectors[:,i] = np.real(blochvectors[:,i] * np.exp(-1j*phi))
     #Sorting the energies and blochvectors
     ind = np.argsort(energies)
     energies = energies[ind]
