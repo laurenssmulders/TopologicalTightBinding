@@ -70,7 +70,7 @@ def compute_zak_phase(hamiltonian,
     kx = alpha_1 * b_1[0,0] + alpha_2 * b_2[0,0]
     ky = alpha_1 * b_1[1,0] + alpha_2 * b_2[1,0]
 
-    dk = np.transpose(np.array([kx[-1], ky[-1]]))
+    dk = np.transpose(np.array([kx[-1] - kx[0], ky[-1] - ky[0]]))
     diagonal = np.zeros((dim,), dtype='complex')
     for i in range(dim):
         diagonal[i] = np.exp(1j*np.vdot(dk,offsets[i]))
@@ -125,7 +125,8 @@ def locate_dirac_strings(hamiltonian,
         The direction (and length) of the paths in terms of b1 and b2
     perpendicular_direction: numpy.ndarray
         The perpendicular direction to the path in terms of b1 and b2 and its
-        length determines the range of paths drawn.
+        length determines the range of paths drawn. It does not actually have to 
+        be perpendicular.
     num_lines: int
         The number of parallel paths to draw
     save: str
@@ -167,14 +168,19 @@ def locate_dirac_strings(hamiltonian,
     for i in range(num_lines):
         start = np.transpose([start_points[:,i]])
         end = np.transpose([end_points[:,i]])
-        zak_phase = np.rint(np.real(compute_zak_phase(hamiltonian, a_1, a_2, offsets, 
-                                      start, end, num_points, omega, num_steps, 
-                                      lowest_quasi_energy, enforce_real, method, 
-                                      regime))) % 2
+        zak_phase = np.rint(np.real(compute_zak_phase(hamiltonian, a_1, a_2, 
+                                                      offsets, start, end, 
+                                                      num_points, omega, 
+                                                      num_steps, 
+                                                      lowest_quasi_energy, 
+                                                      enforce_real, method, 
+                                                      regime))/np.pi) % 2
         zak_phases[:,i] = zak_phase
-    plt.plot(paths, zak_phases[0], label='Band 0')
-    plt.plot(paths, zak_phases[1], label='Band 1')
-    plt.plot(paths, zak_phases[2], label='Band 2')
+    plt.plot(paths, zak_phases[0], label='Band 1', alpha=0.5)
+    plt.plot(paths, zak_phases[1], label='Band 2', alpha=0.5)
+    plt.plot(paths, zak_phases[2], label='Band 3', alpha=0.5)
+    plt.xticks([0,1])
+    plt.yticks([0,1], ['$0$', '$\pi$'])
     plt.legend()
     plt.show()
     plt.savefig(save)

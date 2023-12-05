@@ -13,7 +13,8 @@ def compute_bandstructure2D(hamiltonian,
                             num_points, 
                             omega=0, 
                             num_steps=0, 
-                            lowest_quasi_energy=-np.pi, 
+                            lowest_quasi_energy=-np.pi,
+                            enforce_real=True,
                             method='trotter', 
                             regime='driven'):
     """Computes the bandstructure for a given static bloch hamiltonian.
@@ -76,7 +77,8 @@ def compute_bandstructure2D(hamiltonian,
             energies, blochvectors = compute_eigenstates(hamiltonian, k, omega, 
                                                          num_steps, 
                                                          lowest_quasi_energy, 
-                                                         method, regime)
+                                                         enforce_real, method, 
+                                                         regime)
             energy_grid[i,j] = energies
             blochvector_grid[i,j] = blochvectors
     
