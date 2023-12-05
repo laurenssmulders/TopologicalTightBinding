@@ -140,12 +140,27 @@ def plot_bandstructure2D(energy_grid,
     # Masking the data we do not want to plot
     E[:, (kx>kxmax) | (kx<kxmin) | (ky>kymax) | (ky<kymin)] = np.nan
 
+    # Dealing with discontinuities
+    top = np.nanmax(E)
+    print(top)
+    bottom = np.nanmin(E)
+    print(bottom)
+    for band in range(E.shape[0]):
+        distance_to_top = np.abs(E[band] - top)
+        distance_to_bottom = np.abs(E[band] - bottom)
+        
+        threshold = 0.1 * 2 * np.pi
+        discontinuity_mask = distance_to_top < threshold
+        E[band] = np.where(discontinuity_mask, np.nan, E[band])
+        discontinuity_mask = distance_to_bottom < threshold
+        E[band] = np.where(discontinuity_mask, np.nan, E[band])
+
     # Plotting
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.spring,
-                            linewidth=0)
-    surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.summer,
-                        linewidth=0)
+    #surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.spring,
+                            #linewidth=0)
+    #surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.summer,
+                        #linewidth=0)
     surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.winter,
                         linewidth=0)
     tick_values = np.linspace(-4,4,9) * np.pi / 2
