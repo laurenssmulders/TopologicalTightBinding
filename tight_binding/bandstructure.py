@@ -82,7 +82,45 @@ def compute_bandstructure2D(hamiltonian,
             energy_grid[i,j] = energies
             blochvector_grid[i,j] = blochvectors
     
-    return energy_grid, blochvector_grid
+    # Sorting the energies and blochvectors
+    energies_sorted = np.zeros(energy_grid.shape, dtype='float')
+    blochvectors_sorted = np.zeros(blochvector_grid.shape, dtype='complex')
+    if regime == 'driven':
+        for i in range(energy_grid.shape[0]):
+            for j in range(energy_grid.shape[1]):
+                if i == 0 and j == 0:
+                    current_energies = energy_grid[i,j]
+                    ind = np.argsort(current_energies)
+                    energies_sorted[i,j] = energy_grid[i,j, ind]
+                    blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+                    previous_energies = current_energies[ind]
+                else:
+                    current_energies = energy_grid[i,j]
+                    ind = np.argsort(current_energies)
+                    differences = np.zeros((3,), dtype='float')
+                    for shift in range(3):
+                        ind_roll = np.roll(ind,shift)
+                        diff = ((current_energies[ind_roll] - previous_energies) 
+                                % (2*np.pi))
+                        diff = (diff + 2*np.pi*np.floor((lowest_quasi_energy-diff) 
+                                                        / (2*np.pi) + 1))
+                        diff = np.abs(diff)
+                        diff = np.sum(diff)
+                        differences[shift] = diff
+                    minimum = np.argmin(differences)
+                    ind = np.roll(ind, minimum)
+                    energies_sorted[i,j] = energy_grid[i,j, ind]
+                    blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+                    previous_energies = current_energies[ind]
+    elif regime == 'static':
+        for i in range(energy_grid.shape[0]):
+            for j in range(energy_grid.shape[1]):
+                current_energies = energy_grid[i,j]
+                ind = np.argsort(current_energies)
+                energies_sorted[i,j] = current_energies[ind]
+                blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+
+    return energies_sorted, blochvectors_sorted
 
 def plot_bandstructure2D(energy_grid,
                          a_1,
@@ -92,7 +130,10 @@ def plot_bandstructure2D(energy_grid,
                          kxmax=1.25*np.pi, 
                          kymin=-1.25*np.pi, 
                          kymax=1.25*np.pi,
-                         regime='driven'):
+                         bands_to_plot=np.array([True, True, True]),
+                         lowest_quasi_energy=-np.pi,
+                         regime='driven',
+                         discontinuity_threshold=0.05):
     """Plots the bandstructure calculated from compute_bandstructure2D for 3 
     band systems
     
@@ -114,8 +155,14 @@ def plot_bandstructure2D(energy_grid,
         The minimum ky value to plot
     kymax: float
         The maximum ky value to plot
+    bands_to_plot: numpy.ndarray
+        Boolean array of which bands to plot
+    lowest_quasi_energy: float
+        The bottom of the FBZ
     regime: str
         'driven'or 'static'
+    discontinuity_threshold = float
+        The values to not plot near the upper and lower boundaries of the FBZ
     """
     # Need to periodically extend the energy array to span the whole region
     b_1, b_2 = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
@@ -141,15 +188,13 @@ def plot_bandstructure2D(energy_grid,
     E[:, (kx>kxmax) | (kx<kxmin) | (ky>kymax) | (ky<kymin)] = np.nan
 
     # Dealing with discontinuities
-    top = np.nanmax(E)
-    print(top)
-    bottom = np.nanmin(E)
-    print(bottom)
+    top = lowest_quasi_energy + 2 * np.pi
+    bottom = lowest_quasi_energy
     for band in range(E.shape[0]):
         distance_to_top = np.abs(E[band] - top)
         distance_to_bottom = np.abs(E[band] - bottom)
         
-        threshold = 0.1 * 2 * np.pi
+        threshold = discontinuity_threshold * 2 * np.pi
         discontinuity_mask = distance_to_top < threshold
         E[band] = np.where(discontinuity_mask, np.nan, E[band])
         discontinuity_mask = distance_to_bottom < threshold
@@ -157,12 +202,15 @@ def plot_bandstructure2D(energy_grid,
 
     # Plotting
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    #surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.spring,
-                            #linewidth=0)
-    #surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.summer,
-                        #linewidth=0)
-    surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.winter,
-                        linewidth=0)
+    if bands_to_plot[0]:
+        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.spring,
+                                linewidth=0)
+    if bands_to_plot[1]:
+        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.summer,
+                                linewidth=0)
+    if bands_to_plot[2]:
+        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.winter,
+                                linewidth=0)
     tick_values = np.linspace(-4,4,9) * np.pi / 2
     tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
     ax.set_xticks(tick_values)

@@ -20,36 +20,8 @@ a_2 = np.transpose(np.array([[0,1]]))
 r = np.transpose(np.array([[0,0]]))
 offsets = np.array([r,r,r])
 
-H = square_hamiltonian_driven(0,1,-1,0,0,0,1,1,1,0,0,0,1,1,0,3,0)
+H = square_hamiltonian_driven(0,1,-1,0,0,0,1,1,1,0,0,0,1,1,0,8,0)
 
-energies, blochvectors = compute_bandstructure2D(H, a_1, a_2, 100, 6, 100)
+energies, blochvectors = compute_bandstructure2D(H,a_1,a_2,100,8,100)
 
-energies_sorted = np.zeros(energies.shape, dtype='float')
-blochvectors_sorted = np.zeros(blochvectors.shape, dtype='complex')
-for i in range(energies.shape[0]):
-    for j in range(energies.shape[1]):
-        if i == 0 and j == 0:
-            current_energies = energies[i,j] % (2 * np.pi)
-            ind = np.argsort(current_energies)
-            energies_sorted[i,j] = energies[i,j, ind]
-            blochvectors_sorted[i,j] = blochvectors[i,j,:,ind]
-            previous_energies = current_energies[ind]
-        else:
-            current_energies = energies[i,j] % (2 * np.pi)
-            ind = np.argsort(current_energies)
-            differences = np.zeros((3,), dtype='float')
-            for shift in range(3):
-                ind_roll = np.roll(ind,shift)
-                diff = (current_energies[ind] - previous_energies) % (2*np.pi)
-                diff = (diff + 2*np.pi*np.floor((-np.pi-diff) 
-                                                / (2*np.pi) + 1))
-                diff = np.abs(diff)
-                diff = np.sum(diff)
-                differences[shift] = diff
-            minimum = np.argmin(differences)
-            ind = np.roll(ind, minimum)
-            energies_sorted[i,j] = energies[i,j, ind]
-            blochvectors_sorted[i,j] = blochvectors[i,j,:,ind]
-            previous_energies = current_energies[ind]
-
-plot_bandstructure2D(energies_sorted, a_1, a_2, 'test.png')
+plot_bandstructure2D(energies, a_1, a_2, 'test.png')
