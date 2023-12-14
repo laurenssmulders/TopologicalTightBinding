@@ -178,27 +178,30 @@ def plot_bandstructure2D(energy_grid,
         ky = alpha_1 * b_1[1,0] + alpha_2 * b_2[1,0]
         span = ((np.min(kx) < kxmin) and (np.max(kx) > kxmax) 
                     and (np.min(ky) < kymin) and (np.max(ky) > kymax))
+        
     # Specifying which indices in the original array correspond to indices in 
     # the extended array
     i = ((alpha_1%1) * num_points).astype(int)
     j = ((alpha_2%1) * num_points).astype(int)
     energy_grid_extended = energy_grid[i,j]
     E = np.transpose(energy_grid_extended, (2,0,1))
+
     # Masking the data we do not want to plot
     E[:, (kx>kxmax) | (kx<kxmin) | (ky>kymax) | (ky<kymin)] = np.nan
 
     # Dealing with discontinuities
-    top = lowest_quasi_energy + 2 * np.pi
-    bottom = lowest_quasi_energy
-    for band in range(E.shape[0]):
-        distance_to_top = np.abs(E[band] - top)
-        distance_to_bottom = np.abs(E[band] - bottom)
-        
-        threshold = discontinuity_threshold * 2 * np.pi
-        discontinuity_mask = distance_to_top < threshold
-        E[band] = np.where(discontinuity_mask, np.nan, E[band])
-        discontinuity_mask = distance_to_bottom < threshold
-        E[band] = np.where(discontinuity_mask, np.nan, E[band])
+    if regime == 'driven':
+        top = lowest_quasi_energy + 2 * np.pi
+        bottom = lowest_quasi_energy
+        for band in range(E.shape[0]):
+            distance_to_top = np.abs(E[band] - top)
+            distance_to_bottom = np.abs(E[band] - bottom)
+            
+            threshold = discontinuity_threshold * 2 * np.pi
+            discontinuity_mask = distance_to_top < threshold
+            E[band] = np.where(discontinuity_mask, np.nan, E[band])
+            discontinuity_mask = distance_to_bottom < threshold
+            E[band] = np.where(discontinuity_mask, np.nan, E[band])
 
     # Plotting
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
