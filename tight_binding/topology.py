@@ -123,10 +123,10 @@ def compute_zak_phase(hamiltonian,
             blochvectors[i] = blochvectors[i,:,ind]
 
     # Taking care of centre offsets
-    blochvectors[-1] = np.dot(offset_matrix, blochvectors[i])
+    blochvectors[-1] = np.dot(offset_matrix, blochvectors[-1])
 
     # Calculating the Zak phases from the blochvectors
-    overlaps = np.ones((num_points, dim), dtype='complex')
+    overlaps = np.ones((num_points - 1, dim), dtype='complex')
     for i in range(num_points - 1):
         for band in range(dim):
             overlaps[i, band] = np.vdot(blochvectors[i,:,band], 
@@ -209,26 +209,63 @@ def compute_zak_phase_wilson_loop(hamiltonian,
     
     # Calculating the blochvectors along the path
     blochvectors = np.zeros((num_points,dim,dim), dtype='complex')
+    energies = np.zeros((num_points,dim), dtype='float')
     for i in range(num_points):
         k = np.transpose(np.array([[kx[i],ky[i]]]))
-        _, eigenvectors = compute_eigenstates(hamiltonian, k, omega, 
+        eigenenergies, eigenvectors = compute_eigenstates(hamiltonian, k, omega, 
                                                  num_steps, lowest_quasi_energy,
                                                  enforce_real, method, regime)
-
+        energies[i] = eigenenergies
         blochvectors[i] = eigenvectors
+    
+    # Sorting the energies and blochvectors
+    if regime == 'driven':
+        for i in range(energies.shape[0]):
+            if i == 0:
+                current_energies = energies[i]
+                ind = np.argsort(current_energies)
+                energies[i] = current_energies[ind]
+                blochvectors[i] = blochvectors[i,:,ind]
+                previous_energies = current_energies[ind]
+            else:
+                current_energies = energies[i]
+                ind = np.argsort(current_energies)
+                differences = np.zeros((3,), dtype='float')
+                for shift in range(3):
+                    ind_roll = np.roll(ind,shift)
+                    diff = ((current_energies[ind_roll] - previous_energies) 
+                            % (2*np.pi))
+                    diff = (diff + 2*np.pi*np.floor((-np.pi-diff) 
+                                                    / (2*np.pi) + 1))
+                    diff = np.abs(diff)
+                    diff = np.sum(diff)
+                    differences[shift] = diff
+                minimum = np.argmin(differences)
+                ind = np.roll(ind, minimum)
+                energies[i] = energies[i,ind]
+                blochvectors[i] = blochvectors[i,:,ind]
+                previous_energies = energies[i]
+
+    elif regime == 'static':
+        for i in range(energies.shape[0]):
+            current_energies = energies[i]
+            ind = np.argsort(current_energies)
+            energies[i] = current_energies[ind]
+            blochvectors[i] = blochvectors[i,:,ind]
 
     blochvectors[-1] = np.matmul(offset_matrix, blochvectors[-1])
 
     # Calculating the Zak phases from the blochvectors
-    overlaps = np.ones((num_points, dim, dim), dtype='complex')
+    overlaps = np.ones((num_points - 1, dim, dim), dtype='complex')
     for i in range(num_points - 1):
         overlaps[i] = np.matmul(np.conjugate(np.transpose(blochvectors[i])), 
                                 blochvectors[i+1])
     zak_phase = np.identity(3, dtype='complex')
-    for i in range(overlaps.shape[0]):
+    for i in range(num_points - 1):
         zak_phase = np.matmul(zak_phase,overlaps[i])
+    print(zak_phase)
     zak_phase = 1j*la.logm(zak_phase)
-    return zak_phase
+    return zak_phase, energies
 
 def locate_dirac_strings(hamiltonian,
                          direction,
