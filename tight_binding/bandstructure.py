@@ -102,7 +102,7 @@ def compute_bandstructure2D(hamiltonian,
                         ind_roll = np.roll(ind,shift)
                         diff = ((current_energies[ind_roll] - previous_energies) 
                                 % (2*np.pi))
-                        diff = (diff + 2*np.pi*np.floor((lowest_quasi_energy-diff) 
+                        diff = (diff + 2*np.pi*np.floor((-np.pi-diff) 
                                                         / (2*np.pi) + 1))
                         diff = np.abs(diff)
                         diff = np.sum(diff)
@@ -111,7 +111,7 @@ def compute_bandstructure2D(hamiltonian,
                     ind = np.roll(ind, minimum)
                     energies_sorted[i,j] = energy_grid[i,j, ind]
                     blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
-                    previous_energies = current_energies[ind]
+                    previous_energies = energies_sorted[i,j]
     elif regime == 'static':
         for i in range(energy_grid.shape[0]):
             for j in range(energy_grid.shape[1]):
