@@ -28,9 +28,9 @@ def kagome_hamiltonian_static(delta_a, delta_b, delta_c, J, a):
     H: function
         The kagome bloch hamiltonian as a function of quasimomentum k.
     """
-    d_ba = a*np.transpose(np.array([[0.5, 0]]))
-    d_ca = a*np.transpose(np.array([[0.25, 0.25*3**0.5]]))
-    d_cb = a*np.transpose(np.array([[-0.25, 0.25*3**0.5]]))
+    d_ba = a*np.array([0.5, 0])
+    d_ca = a*np.array([0.25, 0.25*3**0.5])
+    d_cb = a*np.array([-0.25, 0.25*3**0.5])
     d_ab = -d_ba
     d_ac = -d_ca
     d_bc = -d_cb
@@ -97,8 +97,8 @@ def square_hamiltonian_static(delta_a,
     H: function
         The square bloch hamiltonian as a function of quasimomentum k.
     """
-    a_1 = a*np.transpose(np.array([[1,0]]))
-    a_2 = a*np.transpose(np.array([[0,1]]))
+    a_1 = a*np.array([1,0])
+    a_2 = a*np.array([0,1])
 
     delta_ba = np.conjugate(delta_ab)
     delta_ca = np.conjugate(delta_ac)
@@ -156,16 +156,16 @@ def kagome_hamiltonian_driven(delta_a,
     H: function
         The kagome bloch hamiltonian as a function of quasimomentum k and 
         time t"""
-    d_ba = a*np.transpose(np.array([[0.5, 0]]))
-    d_ca = a*np.transpose(np.array([[0.25, 0.25*3**0.5]]))
-    d_cb = a*np.transpose(np.array([[-0.25, 0.25*3**0.5]]))
+    d_ba = a*np.array([0.5, 0])
+    d_ca = a*np.array([0.25, 0.25*3**0.5])
+    d_cb = a*np.array([-0.25, 0.25*3**0.5])
     d_ab = -d_ba
     d_ac = -d_ca
     d_bc = -d_cb
 
     def A(time):
-        drive = np.transpose(np.array([[A_x*np.cos(omega*time), 
-                                        -A_y*np.cos(omega*time + phi)]]))
+        drive = np.array([A_x*np.cos(omega*time), 
+                                        -A_y*np.cos(omega*time + phi)])
         return drive
     
     def H(k,t):
@@ -242,8 +242,8 @@ def square_hamiltonian_driven(delta_a,
     H: function
         The square bloch hamiltonian as a function of quasimomentum k and 
         time t"""
-    a_1 = a*np.transpose(np.array([[1,0]]))
-    a_2 = a*np.transpose(np.array([[0,1]]))
+    a_1 = a*np.array([1,0])
+    a_2 = a*np.array([0,1])
 
     delta_ba = np.conjugate(delta_ab)
     delta_ca = np.conjugate(delta_ac)
@@ -253,8 +253,8 @@ def square_hamiltonian_driven(delta_a,
     J_cb = np.conjugate(J_bc)
 
     def A(time):
-        drive = np.transpose(np.array([[A_x*np.cos(omega*time), 
-                                        -A_y*np.cos(omega*time + phi)]]))
+        drive = np.array([A_x*np.cos(omega*time), 
+                                        -A_y*np.cos(omega*time + phi)])
         return drive
     
     def H(k,t):

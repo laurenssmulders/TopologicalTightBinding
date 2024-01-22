@@ -59,19 +59,19 @@ def compute_zak_phase(hamiltonian,
     
     b_1, b_2 = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
     if regime == 'static':
-        dim = hamiltonian(np.transpose(np.array([[0,0]]))).shape[0]
+        dim = hamiltonian(np.array([0,0])).shape[0]
     elif regime == 'driven':
-        dim = hamiltonian(np.transpose(np.array([[0,0]])),0).shape[0]
+        dim = hamiltonian(np.array([0,0]),0).shape[0]
 
     # Parametrizing the path
     x = np.linspace(0,1,num_points) # array what fraction of the path we're on
     d = end - start
-    alpha_1 = start[0,0] + x * d[0,0]
-    alpha_2 = start[1,0] + x * d[1,0]
-    kx = alpha_1 * b_1[0,0] + alpha_2 * b_2[0,0]
-    ky = alpha_1 * b_1[1,0] + alpha_2 * b_2[1,0]
+    alpha_1 = start[0] + x * d[0]
+    alpha_2 = start[1] + x * d[1]
+    kx = alpha_1 * b_1[0] + alpha_2 * b_2[0]
+    ky = alpha_1 * b_1[1] + alpha_2 * b_2[1]
 
-    dk = np.transpose(np.array([kx[-1] - kx[0], ky[-1] - ky[0]]))
+    dk = np.array(kx[-1] - kx[0], ky[-1] - ky[0])
     diagonal = np.zeros((dim,), dtype='complex')
     for i in range(dim):
         diagonal[i] = np.exp(1j*np.vdot(dk,offsets[i]))
@@ -81,7 +81,7 @@ def compute_zak_phase(hamiltonian,
     blochvectors = np.zeros((num_points,dim,dim), dtype='complex')
     energies = np.zeros((num_points,dim), dtype='float')
     for i in range(num_points):
-        k = np.transpose(np.array([[kx[i],ky[i]]]))
+        k = np.array([kx[i],ky[i]])
         eigenenergies, eigenvectors = compute_eigenstates(hamiltonian, k, omega, 
                                                  num_steps, lowest_quasi_energy,
                                                  enforce_real, method, regime)
@@ -189,19 +189,19 @@ def compute_zak_phase_wilson_loop(hamiltonian,
     
     b_1, b_2 = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
     if regime == 'static':
-        dim = hamiltonian(np.transpose(np.array([[0,0]]))).shape[0]
+        dim = hamiltonian(np.array([0,0])).shape[0]
     elif regime == 'driven':
-        dim = hamiltonian(np.transpose(np.array([[0,0]])),0).shape[0]
+        dim = hamiltonian(np.array([0,0]),0).shape[0]
 
     # Parametrizing the path
     x = np.linspace(0,1,num_points) # array what fraction of the path we're on
     d = end - start
-    alpha_1 = start[0,0] + x * d[0,0]
-    alpha_2 = start[1,0] + x * d[1,0]
-    kx = alpha_1 * b_1[0,0] + alpha_2 * b_2[0,0]
-    ky = alpha_1 * b_1[1,0] + alpha_2 * b_2[1,0]
+    alpha_1 = start[0] + x * d[0]
+    alpha_2 = start[1] + x * d[1]
+    kx = alpha_1 * b_1[0] + alpha_2 * b_2[0]
+    ky = alpha_1 * b_1[1] + alpha_2 * b_2[1]
 
-    dk = np.transpose(np.array([kx[-1] - kx[0], ky[-1] - ky[0]]))
+    dk = np.array([kx[-1] - kx[0], ky[-1] - ky[0]])
     diagonal = np.zeros((dim,), dtype='complex')
     for i in range(dim):
         diagonal[i] = np.exp(1j*np.vdot(dk,offsets[i]))
@@ -211,7 +211,7 @@ def compute_zak_phase_wilson_loop(hamiltonian,
     blochvectors = np.zeros((num_points,dim,dim), dtype='complex')
     energies = np.zeros((num_points,dim), dtype='float')
     for i in range(num_points):
-        k = np.transpose(np.array([[kx[i],ky[i]]]))
+        k = np.array([kx[i],ky[i]])
         eigenenergies, eigenvectors = compute_eigenstates(hamiltonian, k, omega, 
                                                  num_steps, lowest_quasi_energy,
                                                  enforce_real, method, regime)
@@ -253,7 +253,7 @@ def compute_zak_phase_wilson_loop(hamiltonian,
             energies[i] = current_energies[ind]
             blochvectors[i] = blochvectors[i,:,ind]
 
-    blochvectors[-1] = np.matmul(offset_matrix, blochvectors[-1])
+    blochvectors[-1] = np.dot(offset_matrix, blochvectors[-1])
 
     # Calculating the Zak phases from the blochvectors
     overlaps = np.ones((num_points - 1, dim, dim), dtype='complex')
@@ -263,7 +263,6 @@ def compute_zak_phase_wilson_loop(hamiltonian,
     zak_phase = np.identity(3, dtype='complex')
     for i in range(num_points - 1):
         zak_phase = np.matmul(zak_phase,overlaps[i])
-    print(zak_phase)
     zak_phase = 1j*la.logm(zak_phase)
     return zak_phase, energies
 
@@ -328,13 +327,12 @@ def locate_dirac_strings(hamiltonian,
     -------
     """
     paths = np.linspace(0,1,num_lines)
-    start_points = (np.transpose(np.array([[0,0]])) 
-                    + paths * perpendicular_direction)
+    start_points = np.array([0,0]) + paths * perpendicular_direction
     end_points = start_points + direction
     zak_phases = np.zeros((3,num_lines), dtype='int')
     for i in range(num_lines):
-        start = np.transpose([start_points[:,i]])
-        end = np.transpose([end_points[:,i]])
+        start = start_points[i]
+        end = end_points[i]
         zak_phase = np.rint(np.real(compute_zak_phase(hamiltonian, a_1, a_2, 
                                                       offsets, start, end, 
                                                       num_points, omega, 

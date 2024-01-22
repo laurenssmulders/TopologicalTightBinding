@@ -18,15 +18,15 @@ import matplotlib.pyplot as plt
 #H = kagome_hamiltonian_driven(0,3,-3,1,1,2,0,6,0)
 
 #SQUARE
-a_1 = np.transpose(np.array([[1,0]]))
-a_2 = np.transpose(np.array([[0,1]]))
-r = np.transpose(np.array([[0,0]]))
-offsets = np.array([r,r,r])
+#a_1 = np.transpose(np.array([[1,0]]))
+#a_2 = np.transpose(np.array([[0,1]]))
+#r = np.transpose(np.array([[0,0]]))
+#offsets = np.array([r,r,r])
 
-H = square_hamiltonian_driven(0,-1,1,0,0,0,1,1,1,0,0,0,1,1,0,8,0)
+#H = square_hamiltonian_driven(0,-1,1,0,0,0,1,1,1,0,0,0,1,1,0,8,0)
 
-energies,_ = compute_bandstructure2D(H,a_1,a_2,100,8,100)
-plot_bandstructure2D(energies,a_1,a_2,'test.png')
+#energies,_ = compute_bandstructure2D(H,a_1,a_2,100,8,100)
+#plot_bandstructure2D(energies,a_1,a_2,'test.png')
 
 
 

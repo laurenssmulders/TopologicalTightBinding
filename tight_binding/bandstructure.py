@@ -17,7 +17,7 @@ def compute_bandstructure2D(hamiltonian,
                             enforce_real=True,
                             method='trotter', 
                             regime='driven'):
-    """Computes the bandstructure for a given static bloch hamiltonian.
+    """Computes the bandstructure for a given bloch hamiltonian.
     
     Parameters
     ----------
@@ -45,10 +45,10 @@ def compute_bandstructure2D(hamiltonian,
     Returns
     -------
     energy_grid: numpy.ndarray
-        An array with the energies at each point. energy_grid[i,j] is an array
+        A 3D array with the energies at each point. energy_grid[i,j] is an array
         of the energies at k = i / num_points * b1 + j / num_points * b2
     blochvector_grid: numpy.ndarray
-        An array with the blochvectors at each point. blochvector_grid[i,j] is 
+        A 4D array with the blochvectors at each point. blochvector_grid[i,j] is 
         an array of the blochvectors at 
         k = i / num_points * b1 + j / num_points * b2
     """
@@ -59,21 +59,21 @@ def compute_bandstructure2D(hamiltonian,
     alpha_1, alpha_2 = np.meshgrid(alpha, alpha, indexing='ij')
 
     # Finding the corresponding k_vectors
-    kx = alpha_1 * b_1[0,0] + alpha_2 * b_2[0,0]
-    ky = alpha_1 * b_1[1,0] + alpha_2 * b_2[1,0]
+    kx = alpha_1 * b_1[0] + alpha_2 * b_2[0]
+    ky = alpha_1 * b_1[1] + alpha_2 * b_2[1]
 
     # Creating arrays for the energies and blochvectors
     if regime == 'static':
-        dim = hamiltonian(np.transpose(np.array([[0,0]]))).shape[0]
+        dim = hamiltonian(np.array([0,0])).shape[0]
     elif regime == 'driven':
-        dim = hamiltonian(np.transpose(np.array([[0,0]])),0).shape[0]
+        dim = hamiltonian(np.array([0,0]),0).shape[0]
     energy_grid = np.zeros((num_points,num_points,dim), dtype='float')
     blochvector_grid = np.zeros((num_points,num_points,dim,dim), dtype='complex')
 
     # Filling the arrays
     for i in range(num_points):
         for j in range(num_points):
-            k = np.transpose(np.array([[kx[i,j],ky[i,j]]]))
+            k = np.array([kx[i,j],ky[i,j]])
             energies, blochvectors = compute_eigenstates(hamiltonian, k, omega, 
                                                          num_steps, 
                                                          lowest_quasi_energy, 
