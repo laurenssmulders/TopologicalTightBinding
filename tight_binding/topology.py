@@ -92,18 +92,15 @@ def compute_zak_phase(hamiltonian,
     if regime == 'driven':
         for i in range(energies.shape[0]):
             if i == 0:
-                current_energies = energies[i]
-                ind = np.argsort(current_energies)
-                energies[i] = current_energies[ind]
+                ind = np.argsort(energies[i])
+                energies[i] = energies[i,ind]
                 blochvectors[i] = blochvectors[i,:,ind]
-                previous_energies = current_energies[ind]
             else:
-                current_energies = energies[i]
-                ind = np.argsort(current_energies)
+                ind = np.argsort(energies[i])
                 differences = np.zeros((3,), dtype='float')
                 for shift in range(3):
                     ind_roll = np.roll(ind,shift)
-                    diff = ((current_energies[ind_roll] - previous_energies) 
+                    diff = ((energies[i,ind_roll] - energies[i-1])
                             % (2*np.pi))
                     diff = (diff + 2*np.pi*np.floor((-np.pi-diff) 
                                                     / (2*np.pi) + 1))
@@ -114,12 +111,10 @@ def compute_zak_phase(hamiltonian,
                 ind = np.roll(ind, minimum)
                 energies[i] = energies[i,ind]
                 blochvectors[i] = blochvectors[i,:,ind]
-                previous_energies = energies[i]
     elif regime == 'static':
         for i in range(energies.shape[0]):
-            current_energies = energies[i]
-            ind = np.argsort(current_energies)
-            energies[i] = current_energies[ind]
+            ind = np.argsort(energies[i])
+            energies[i] = energies[i,ind]
             blochvectors[i] = blochvectors[i,:,ind]
 
     # Taking care of centre offsets
@@ -136,139 +131,6 @@ def compute_zak_phase(hamiltonian,
         zak_phases[band] = 1j*np.log(np.prod(overlaps[:,band]))
     
     return zak_phases, energies
-
-def compute_zak_phase_wilson_loop(hamiltonian, 
-                      a_1, 
-                      a_2, 
-                      offsets, 
-                      start, 
-                      end, 
-                      num_points, 
-                      omega=0, 
-                      num_steps=0, 
-                      lowest_quasi_energy=-np.pi, 
-                      enforce_real=True,
-                      method='trotter', 
-                      regime='driven'):
-    """Computes the Zak phase along a path from start to end.
-    
-    Parameters
-    ----------
-    hamiltonian: function
-        The bloch hamiltonian
-    a_1: numpy.ndarray
-        The first lattice vector
-    a_2: numpy.ndarray
-        The second lattice vector
-    offsets: numpy.ndarray
-        The Wannier centre offsets
-    start: numpy.ndarray
-        The starting point in terms of the reciprocal lattice vectors
-    end: numpy.ndarray
-        The endpoint in terms of the reciprocal lattice vectors
-    num_points: int
-        The number of points along the path to evaluate the blochvectors at
-    omega: float
-        The angular frequency of the bloch hamiltonian in case of a driven 
-        system
-    num_steps: int
-        The number of steps to use in the calculation of the time evolution
-    lowest_quasi_energy: float
-        The lower bound of the 2pi interval in which to give the quasi energies
-    enforce_real: bool
-        Whether or not to force the blochvectors to be real
-    method: str
-        The method for calculating the time evolution: trotter or Runge-Kutta
-    regime: str
-        'driven' or 'static'
-        
-    Returns
-    -------
-    zak_phases: np.ndarray
-        The zak phases for each band from lowest to highest"""
-    
-    b_1, b_2 = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
-    if regime == 'static':
-        dim = hamiltonian(np.array([0,0])).shape[0]
-    elif regime == 'driven':
-        dim = hamiltonian(np.array([0,0]),0).shape[0]
-
-    # Parametrizing the path
-    x = np.linspace(0,1,num_points) # array what fraction of the path we're on
-    d = end - start
-    alpha_1 = start[0] + x * d[0]
-    alpha_2 = start[1] + x * d[1]
-    kx = alpha_1 * b_1[0] + alpha_2 * b_2[0]
-    ky = alpha_1 * b_1[1] + alpha_2 * b_2[1]
-
-    dk = np.array([kx[-1] - kx[0], ky[-1] - ky[0]])
-    diagonal = np.zeros((dim,), dtype='complex')
-    for i in range(dim):
-        diagonal[i] = np.exp(1j*np.vdot(dk,offsets[i]))
-    offset_matrix = np.diag(diagonal)
-    
-    # Calculating the blochvectors along the path
-    blochvectors = np.zeros((num_points,dim,dim), dtype='complex')
-    energies = np.zeros((num_points,dim), dtype='float')
-    for i in range(num_points):
-        k = np.array([kx[i],ky[i]])
-        eigenenergies, eigenvectors = compute_eigenstates(hamiltonian, k, omega, 
-                                                 num_steps, lowest_quasi_energy,
-                                                 enforce_real, method, regime)
-        energies[i] = eigenenergies
-        blochvectors[i] = eigenvectors
-    
-    # Sorting the energies and blochvectors
-    if regime == 'driven':
-        for i in range(energies.shape[0]):
-            if i == 0:
-                current_energies = energies[i]
-                ind = np.argsort(current_energies)
-                energies[i] = current_energies[ind]
-                blochvectors[i] = blochvectors[i,:,ind]
-                previous_energies = current_energies[ind]
-            else:
-                current_energies = energies[i]
-                ind = np.argsort(current_energies)
-                differences = np.zeros((3,), dtype='float')
-                for shift in range(3):
-                    ind_roll = np.roll(ind,shift)
-                    diff = ((current_energies[ind_roll] - previous_energies) 
-                            % (2*np.pi))
-                    diff = (diff + 2*np.pi*np.floor((-np.pi-diff) 
-                                                    / (2*np.pi) + 1))
-                    diff = np.abs(diff)
-                    diff = np.sum(diff)
-                    differences[shift] = diff
-                minimum = np.argmin(differences)
-                ind = np.roll(ind, minimum)
-                energies[i] = energies[i,ind]
-                blochvectors[i] = blochvectors[i,:,ind]
-                previous_energies = energies[i]
-
-    elif regime == 'static':
-        for i in range(energies.shape[0]):
-            current_energies = energies[i]
-            ind = np.argsort(current_energies)
-            energies[i] = current_energies[ind]
-            blochvectors[i] = blochvectors[i,:,ind]
-
-    blochvectors[-1] = np.dot(offset_matrix, blochvectors[-1])
-
-    # Calculating the Zak phases from the blochvectors
-    overlaps = np.ones((num_points - 1, dim, dim), dtype='complex')
-    for i in range(num_points - 1):
-        overlaps[i] = np.matmul(np.conjugate(np.transpose(blochvectors[i])), 
-                                blochvectors[i+1])
-    W = np.identity(3, dtype='complex')
-    for i in range(num_points - 1):
-        W = np.matmul(W,overlaps[i])
-    eigenvalues, eigenvectors = np.linalg.eig(W)
-    print(W)
-    print(eigenvalues)
-    print(eigenvectors)
-    zak_phase = 1j*np.log(eigenvalues)
-    return zak_phase, energies
 
 def locate_dirac_strings(hamiltonian,
                          direction,
@@ -331,19 +193,15 @@ def locate_dirac_strings(hamiltonian,
     -------
     """
     paths = np.linspace(0,1,num_lines)
-    start_points = np.array([0,0]) + paths * perpendicular_direction
-    end_points = start_points + direction
     zak_phases = np.zeros((3,num_lines), dtype='int')
     for i in range(num_lines):
-        start = start_points[i]
-        end = end_points[i]
-        zak_phase = np.rint(np.real(compute_zak_phase(hamiltonian, a_1, a_2, 
-                                                      offsets, start, end, 
-                                                      num_points, omega, 
-                                                      num_steps, 
-                                                      lowest_quasi_energy, 
-                                                      enforce_real, method, 
-                                                      regime))/np.pi) % 2
+        start = paths[i] * perpendicular_direction
+        end = start + direction
+        zak_phase, _ = compute_zak_phase(hamiltonian, a_1, a_2, offsets, start, 
+                                         end, num_points, omega, num_steps, 
+                                         lowest_quasi_energy, enforce_real, 
+                                         method, regime)
+        zak_phase = np.rint(np.real(zak_phase)/np.pi) % 2
         zak_phases[:,i] = zak_phase
     plt.plot(paths, zak_phases[0], label='Band 1', alpha=0.5)
     plt.plot(paths, zak_phases[1], label='Band 2', alpha=0.5)
