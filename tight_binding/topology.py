@@ -199,11 +199,14 @@ def locate_dirac_strings(hamiltonian,
     for i in range(num_lines):
         start = paths[i] * perpendicular_direction
         end = start + direction
-        zak_phase, energy = compute_zak_phase(hamiltonian, a_1, a_2, offsets, start, 
-                                         end, num_points, omega, num_steps, 
-                                         lowest_quasi_energy, enforce_real, 
-                                         method, regime)
+        zak_phase, energy = compute_zak_phase(hamiltonian, a_1, a_2, offsets, 
+                                              start, end, num_points, omega, 
+                                              num_steps, lowest_quasi_energy, 
+                                              enforce_real, method, regime)
+        print(i)
+        print(a_1,a_2,offsets,start,end,num_points,omega,num_steps)
         zak_phase = np.rint(np.real(zak_phase)/np.pi) % 2
+        print(zak_phase)
         zak_phases[:,i] = zak_phase
         energies[i] = energy
     
@@ -228,7 +231,7 @@ def locate_dirac_strings(hamiltonian,
     plt.plot(paths, zak_phases[0], label='Band 1', alpha=0.5)
     plt.plot(paths, zak_phases[1], label='Band 2', alpha=0.5)
     plt.plot(paths, zak_phases[2], label='Band 3', alpha=0.5)
-    plt.xticks([0,1])
+    plt.xticks([0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1])
     plt.yticks([0,1], ['$0$', '$\pi$'])
     plt.legend()
     plt.show()
