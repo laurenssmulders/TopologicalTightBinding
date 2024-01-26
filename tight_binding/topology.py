@@ -56,7 +56,7 @@ def compute_zak_phase(hamiltonian,
     -------
     zak_phases: np.ndarray
         The zak phases for each band from lowest to highest"""
-    
+
     b_1, b_2 = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
     if regime == 'static':
         dim = hamiltonian(np.array([0,0])).shape[0]
@@ -130,7 +130,7 @@ def compute_zak_phase(hamiltonian,
     zak_phases = np.zeros((dim,), dtype='complex')
     for band in range(dim):
         zak_phases[band] = 1j*np.log(np.prod(overlaps[:,band]))
-    
+
     return zak_phases, energies
 
 def locate_dirac_strings(hamiltonian,
@@ -193,18 +193,17 @@ def locate_dirac_strings(hamiltonian,
     Returns
     -------
     """
-    paths = np.linspace(0,1,num_lines)
+    paths = np.linspace(0,1,num_lines,endpoint=False)
     zak_phases = np.zeros((3,num_lines), dtype='int')
     energies = np.zeros((num_lines, num_points, 3), dtype='int')
     for i in range(num_lines):
+        print(i)
         start = paths[i] * perpendicular_direction
         end = start + direction
         zak_phase, energy = compute_zak_phase(hamiltonian, a_1, a_2, offsets, 
                                               start, end, num_points, omega, 
                                               num_steps, lowest_quasi_energy, 
                                               enforce_real, method, regime)
-        print(i)
-        print(a_1,a_2,offsets,start,end,num_points,omega,num_steps)
         zak_phase = np.rint(np.real(zak_phase)/np.pi) % 2
         print(zak_phase)
         zak_phases[:,i] = zak_phase
