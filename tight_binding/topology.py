@@ -71,7 +71,7 @@ def compute_zak_phase(hamiltonian,
     kx = alpha_1 * b_1[0] + alpha_2 * b_2[0]
     ky = alpha_1 * b_1[1] + alpha_2 * b_2[1]
 
-    dk = np.array(kx[-1] - kx[0], ky[-1] - ky[0])
+    dk = np.array([kx[-1] - kx[0], ky[-1] - ky[0]])
     diagonal = np.zeros((dim,), dtype='complex')
     for i in range(dim):
         diagonal[i] = np.exp(1j*np.vdot(dk,offsets[i]))
@@ -260,6 +260,7 @@ def compute_zak_phase_wilson_loop(hamiltonian,
     for i in range(num_points - 1):
         overlaps[i] = np.matmul(np.conjugate(np.transpose(blochvectors[i])), 
                                 blochvectors[i+1])
+    print(overlaps[:10])
     zak_phase = np.identity(3, dtype='complex')
     for i in range(num_points - 1):
         zak_phase = np.matmul(zak_phase,overlaps[i])

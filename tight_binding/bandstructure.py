@@ -174,8 +174,8 @@ def plot_bandstructure2D(energy_grid,
         copies += 1
         alpha = np.linspace(-copies,copies,2*copies*num_points,endpoint=False)
         alpha_1, alpha_2 = np.meshgrid(alpha, alpha, indexing = 'ij')
-        kx = alpha_1 * b_1[0,0] + alpha_2 * b_2[0,0]
-        ky = alpha_1 * b_1[1,0] + alpha_2 * b_2[1,0]
+        kx = alpha_1 * b_1[0] + alpha_2 * b_2[0]
+        ky = alpha_1 * b_1[1] + alpha_2 * b_2[1]
         span = ((np.min(kx) < kxmin) and (np.max(kx) > kxmax) 
                     and (np.min(ky) < kymin) and (np.max(ky) > kymax))
         
