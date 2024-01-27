@@ -101,8 +101,11 @@ def compute_eigenstates(hamiltonian,
     energies: np.ndarray
         An array with the eigenenergies, sorted from low to high.
     blochvectors: np.ndarray
-        An array where the blochvectors[:,i] is the blochvector corresponding to 
-        energies[i]
+        An array where blochvectors[:,i] is the blochvector corresponding to 
+        energies[i], i.e.
+        |    |    |    |
+        | v1 | v2 | v3 |
+        |    |    |    |.
     """
     if regime == 'static':
         H = hamiltonian(k)

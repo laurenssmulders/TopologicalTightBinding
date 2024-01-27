@@ -22,7 +22,7 @@ def compute_reciprocal_lattice_vectors_2D(a_1: np.ndarray, a_2: np.ndarray):
         The second reciprocal lattice vector
     """
 
-    b_1 = 2*np.pi / (a_1[0,0]*a_2[1,0]-a_2[0,0]*a_1[1,0]) * np.transpose(np.array([[a_2[1,0], -a_2[0,0]]]))
-    b_2 = 2*np.pi / (a_2[0,0]*a_1[1,0]-a_1[0,0]*a_2[1,0]) * np.transpose(np.array([[a_1[1,0], -a_1[0,0]]]))
+    b_1 = 2*np.pi / (a_1[0]*a_2[1]-a_2[0]*a_1[1]) * np.array([a_2[1], -a_2[0]])
+    b_2 = 2*np.pi / (a_2[0]*a_1[1]-a_1[0]*a_2[1]) * np.array([a_1[1], -a_1[0]])
 
     return b_1, b_2
