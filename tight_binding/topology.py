@@ -85,6 +85,11 @@ def compute_zak_phase(hamiltonian,
         eigenenergies, eigenvectors = compute_eigenstates(hamiltonian, k, omega, 
                                                  num_steps, lowest_quasi_energy,
                                                  enforce_real, method, regime)
+        #diagonal = np.zeros((dim,), dtype='complex')
+        #for j in range(dim):
+        #    diagonal[j] = np.exp(1j*np.vdot(k,offsets[j]))
+        #    offset_matrix = np.diag(diagonal)
+        #eigenvectors = np.matmul(offset_matrix, eigenvectors)
         energies[i] = eigenenergies
         blochvectors[i] = eigenvectors
 
@@ -197,7 +202,6 @@ def locate_dirac_strings(hamiltonian,
     zak_phases = np.zeros((3,num_lines), dtype='int')
     energies = np.zeros((num_lines, num_points, 3), dtype='int')
     for i in range(num_lines):
-        print(i)
         start = paths[i] * perpendicular_direction
         end = start + direction
         zak_phase, energy = compute_zak_phase(hamiltonian, a_1, a_2, offsets, 
@@ -205,7 +209,6 @@ def locate_dirac_strings(hamiltonian,
                                               num_steps, lowest_quasi_energy, 
                                               enforce_real, method, regime)
         zak_phase = np.rint(np.real(zak_phase)/np.pi) % 2
-        print(zak_phase)
         zak_phases[:,i] = zak_phase
         energies[i] = energy
     
