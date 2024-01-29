@@ -6,9 +6,9 @@ from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
 # PARAMETERS
 ## TO VARY
-A_x = 1
-J_2 = 1
-delta_C = 2
+A_x = 1.5
+J_2 = 0.8
+delta_C = -2
 
 
 ## DEPENDENT
@@ -47,30 +47,33 @@ H = square_hamiltonian_driven(
 )
 
 # BANDSTRUCTURE
-energies, blochvectors = compute_bandstructure2D(H, a_1, a_2, num_points, omega,
-                                                 num_steps, lowest_quasi_energy)
+#energies, blochvectors = compute_bandstructure2D(H, a_1, a_2, num_points, omega,
+#                                                 num_steps, lowest_quasi_energy)
 
-plot_bandstructure2D(energies, a_1, a_2, 'test.png', bands_to_plot = [1,1,1], 
-                     lowest_quasi_energy=lowest_quasi_energy, 
-                     discontinuity_threshold = 0.05)
+#plot_bandstructure2D(energies, a_1, a_2, 'test.png', bands_to_plot = [1,1,1], 
+#                     lowest_quasi_energy=lowest_quasi_energy, 
+#                     discontinuity_threshold = 0.05)
 
 # ZAK PHASES
-#start = np.array([0,0])
-#end = np.array([1,0])
 
-#offsets = np.zeros((3,3))
-#zak_phase, energies = compute_zak_phase(H, a_1, a_2, offsets, start, end, num_points, 
-#                              omega, num_steps, lowest_quasi_energy)
-#zak_phase = np.rint(np.real(zak_phase / np.pi))
+for i in range(100):
+    start = np.array([i / 100,0])
+    end = np.array([i / 100,1])
+    k_x = i / 100 * 2
 
-#print(zak_phase)
+    offsets = np.zeros((3,2))
+    zak_phase, energies = compute_zak_phase(H, a_1, a_2, offsets, start, end, num_points, 
+                                omega, num_steps, lowest_quasi_energy)
+    zak_phase = np.rint(np.real(zak_phase / np.pi))
 
-#fig = plt.figure()
-#plt.plot(energies[:,0], label='band 0')
-#plt.plot(energies[:,1], label='band 1')
-#plt.plot(energies[:,2], label='band 2')
-#plt.legend()
-#plt.show()
+    fig = plt.figure()
+    plt.plot(energies[:,0], label='band 0')
+    plt.plot(energies[:,1], label='band 1')
+    plt.plot(energies[:,2], label='band 2')
+    plt.legend()
+    plt.title('$k_x  = {k_x}\pi$ Zak Phases: {zak_phase}'.format(k_x=k_x, zak_phase=zak_phase))
+    plt.savefig('figures/square/square_Ax_J2_dC_1p5_0p8_-2_slices/square_Ax_J2_dC_1p5_0p8_-2_slice{i}'.format(i=i))
+    plt.close()
 
 # DIRAC STRINGS
 
