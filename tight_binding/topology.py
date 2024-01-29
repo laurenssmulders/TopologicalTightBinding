@@ -123,7 +123,7 @@ def compute_zak_phase(hamiltonian,
             blochvectors[i] = blochvectors[i][:,ind]
 
     # Taking care of centre offsets
-    blochvectors[-1] = np.matmul(offset_matrix, blochvectors[-1])
+    blochvectors[-1] = np.matmul(offset_matrix, blochvectors[0])
 
 
     # Calculating the Zak phases from the blochvectors
