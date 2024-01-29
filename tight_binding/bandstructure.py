@@ -231,7 +231,7 @@ def plot_bandstructure2D(energy_grid,
     ax.grid(False)
     ax.set_box_aspect([1, 1, 2])
     plt.savefig(save)
-    #plt.show()
+    plt.show()
     plt.close()
 
     

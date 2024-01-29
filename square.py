@@ -8,7 +8,7 @@ from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 ## TO VARY
 A_x = 1.5
 J_2 = 0.8
-delta_C = -2
+delta_C = 0
 
 
 ## DEPENDENT
@@ -57,9 +57,9 @@ H = square_hamiltonian_driven(
 # ZAK PHASES
 
 for i in range(100):
-    start = np.array([i / 100,0])
-    end = np.array([i / 100,1])
-    k_x = i / 100 * 2
+    start = np.array([0,i / 100])
+    end = np.array([1,i / 100])
+    k = i / 100 * 2
 
     offsets = np.zeros((3,2))
     zak_phase, energies = compute_zak_phase(H, a_1, a_2, offsets, start, end, num_points, 
@@ -71,8 +71,8 @@ for i in range(100):
     plt.plot(energies[:,1], label='band 1')
     plt.plot(energies[:,2], label='band 2')
     plt.legend()
-    plt.title('$k_x  = {k_x}\pi$ Zak Phases: {zak_phase}'.format(k_x=k_x, zak_phase=zak_phase))
-    plt.savefig('figures/square/square_Ax_J2_dC_1p5_0p8_-2_slices/square_Ax_J2_dC_1p5_0p8_-2_slice{i}'.format(i=i))
+    plt.title('$k_y  = {k}\pi$ Zak Phases: {zak_phase}'.format(k=k, zak_phase=zak_phase))
+    plt.savefig('figures/square/square_Ax_J2_dC_1p5_0p8_0p0_yslices/square_Ax_J2_dC_1p5_0p0_0p5_yslice{i}'.format(i=i))
     plt.close()
 
 # DIRAC STRINGS
