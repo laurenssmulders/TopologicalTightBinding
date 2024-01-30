@@ -25,11 +25,12 @@ H = square_hamiltonian_static(
     delta_a=delta_A,
     delta_b=delta_B,
     delta_c=delta_C,
-    J_ab_0=1,
-    J_ac_0=1,
-    J_bc_0=1,
-    J_ac_1x=1,
-    J_bc_1y=1
+    J_bc_1x=1,
+    J_bb_1x=1,
+    J_cc_1x=1,
+    J_ac_1y=1,
+    J_aa_1y=1,
+    J_cc_1y=1
 )
 
 # BANDSTRUCTURE
@@ -85,7 +86,7 @@ if slicing:
         plt.xticks([0,np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi],
                    [0,'$\pi / 2$', '$\pi$', '$3\pi / 2$', '$2\pi$'])
         plt.ylabel('$E / J$')
-        plt.savefig('figures/square/SP1/static/bandstructures/dA_dC_{delta_A}_{delta_C}_sliced/xslices/dA_dC_{delta_A}_{delta_C}_xslice{i}'.format(delta_A=delta_A, delta_C=delta_C, i=i))
+        plt.savefig('figures/square/SP2/static/bandstructures/SP2_static_dA_dC_{delta_A}_{delta_C}_sliced/xslices/SP2_static_dA_dC_{delta_A}_{delta_C}_xslice{i}'.format(delta_A=delta_A, delta_C=delta_C, i=i))
         plt.close()
 
     # Y slices
@@ -111,5 +112,5 @@ if slicing:
         plt.xticks([0,np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi],
                    [0,'$\pi / 2$', '$\pi$', '$3\pi / 2$', '$2\pi$'])
         plt.ylabel('$E / J$')
-        plt.savefig('figures/square/SP1/static/bandstructures/dA_dC_{delta_A}_{delta_C}_sliced/yslices/dA_dC_{delta_A}_{delta_C}_yslice{i}'.format(delta_A=delta_A, delta_C=delta_C, i=i))
+        plt.savefig('figures/square/SP2/static/bandstructures/SP2_static_dA_dC_{delta_A}_{delta_C}_sliced/yslices/SP2_static_dA_dC_{delta_A}_{delta_C}_yslice{i}'.format(delta_A=delta_A, delta_C=delta_C, i=i))
         plt.close()
