@@ -6,11 +6,11 @@ from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstruct
 from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
 plotting = True
-slicing = True
-locate_ds = True
+slicing = False
+locate_ds = False
 
 # SAVING
-directory = 'figures/square/SP1/driven/bandstructures'
+main_directory = 'figures/square/SP1/driven/bandstructures/scan1'
 
 # LOCATE DIRAC STRINGS
 directions = np.array([
@@ -28,8 +28,8 @@ perpendicular_directions = np.array([
 ])
 
 # PARAMETERS
-delta_A_scan = np.array([-4,-2,2,4])
-delta_C_scan = np.array([-4,-2,2,4])
+delta_A_scan = np.array([-2,-1,0,1,2])
+delta_C_scan = np.array([-2,-1,0,1,2])
 omega = 11
 A_x = 1
 
@@ -52,6 +52,9 @@ for i in range(len(delta_A_scan)):
         name = 'SP1_driven_Ax_w_dA_dC_{A_x}_{omega}_{delta_A}_{delta_C}'.format(
             A_x=A_x, omega=omega, delta_A=delta_A, delta_C=delta_C
         )
+        
+        directory = main_directory + '/' + name
+        os.mkdir(directory)
 
         # BLOCH HAMILTONIAN
         H = square_hamiltonian_driven(
