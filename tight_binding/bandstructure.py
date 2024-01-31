@@ -133,7 +133,8 @@ def plot_bandstructure2D(energy_grid,
                          bands_to_plot=np.array([True, True, True]),
                          lowest_quasi_energy=-np.pi,
                          regime='driven',
-                         discontinuity_threshold=0.05):
+                         discontinuity_threshold=0.05,
+                         show_plot=True):
     """Plots the bandstructure calculated from compute_bandstructure2D for 3 
     band systems
     
@@ -161,8 +162,10 @@ def plot_bandstructure2D(energy_grid,
         The bottom of the FBZ
     regime: str
         'driven'or 'static'
-    discontinuity_threshold = float
+    discontinuity_threshold: float
         The values to not plot near the upper and lower boundaries of the FBZ
+    show_plot: bool
+        Whether to show the plot
     """
     # Need to periodically extend the energy array to span the whole region
     b_1, b_2 = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
@@ -231,7 +234,8 @@ def plot_bandstructure2D(energy_grid,
     ax.grid(False)
     ax.set_box_aspect([1, 1, 2])
     plt.savefig(save)
-    plt.show()
+    if show_plot:
+        plt.show()
     plt.close()
 
     

@@ -152,7 +152,8 @@ def locate_dirac_strings(hamiltonian,
                          lowest_quasi_energy=-np.pi, 
                          enforce_real=True,
                          method='trotter', 
-                         regime='driven'):
+                         regime='driven',
+                         show_plot=True):
     """Computes the Zak phase along several parallel paths and plots them.
     
     Parameters
@@ -194,6 +195,8 @@ def locate_dirac_strings(hamiltonian,
         The method for calculating the time evolution: trotter or Runge-Kutta
     regime: str
         'driven' or 'static'
+    show_plot: bool
+        Whether or not to show the plot.
         
     Returns
     -------
@@ -236,6 +239,7 @@ def locate_dirac_strings(hamiltonian,
     plt.xticks([0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1])
     plt.yticks([0,1], ['$0$', '$\pi$'])
     plt.legend()
-    plt.show()
+    if show_plot:
+        plt.show()
     plt.savefig(save)
-    return zak_phases
+    plt.close()

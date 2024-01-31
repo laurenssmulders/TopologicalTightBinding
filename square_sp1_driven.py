@@ -5,7 +5,7 @@ from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstruct
 from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
 plotting = False
-slicing = True
+slicing = False
 zak = False
 locate_ds = False
 
