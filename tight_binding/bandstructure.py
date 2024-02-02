@@ -224,8 +224,10 @@ def plot_bandstructure2D(energy_grid,
     ax.set_yticks(tick_values)
     ax.set_yticklabels(tick_labels)
     if regime == 'driven':
+        ztick_labels = ['$-2\pi$', '$-3\pi/2$', '$-\pi$', '$-\pi/2$', '0', 
+                        '$\pi/2$', '$\pi$', '$3\pi/2$', '$2\pi$']
         ax.set_zticks(tick_values)
-        ax.set_zticklabels(tick_labels)
+        ax.set_zticklabels(ztick_labels)
     ax.set_zlim(np.nanmin(E),np.nanmax(E))
     ax.set_xlim(kxmin,kxmax)
     ax.set_ylim(kymin,kymax)

@@ -192,11 +192,17 @@ def square_hamiltonian_static(delta_a=0,
     J_cb_2m = np.conjugate(J_bc_2m)
     
     def H(k):
-       H_onsite = np.array([
-           [delta_a, J_ab_0, J_ac_0],
-           [J_ba_0, delta_b, J_bc_0],
-           [J_ca_0, J_cb_0, delta_c]
+       H_offsets = np.array([
+           [delta_a, 0, 0],
+           [0, delta_b, 0],
+           [0, 0, delta_c]
        ])
+
+       H_onsite = np.array([
+           [0, J_ab_0, J_ac_0],
+           [J_ba_0, 0, J_bc_0],
+           [J_ca_0, J_cb_0, 0]
+       ]) * -2
 
        H_horizontal = np.array([
            [J_aa_1x, J_ab_1x, J_ac_1x],
@@ -222,8 +228,8 @@ def square_hamiltonian_static(delta_a=0,
            [J_ca_2m, J_cb_2m, J_cc_2m]
        ]) * -2 * np.cos(np.vdot(k,a_1 - a_2))
        
-       hamiltonian = (H_onsite + H_horizontal + H_vertical + H_diagonal_p 
-                      + H_diagonal_m)
+       hamiltonian = (H_offsets + H_onsite + H_horizontal + H_vertical 
+                      + H_diagonal_p + H_diagonal_m)
        return hamiltonian
     
     return H
@@ -453,11 +459,17 @@ def square_hamiltonian_driven(delta_a=0,
         return drive
     
     def H(k,t):
-       H_onsite = np.array([
-           [delta_a, J_ab_0, J_ac_0],
-           [J_ba_0, delta_b, J_bc_0],
-           [J_ca_0, J_cb_0, delta_c]
+       H_offsets = np.array([
+           [delta_a, 0, 0],
+           [0, delta_b, 0],
+           [0, 0, delta_c]
        ])
+
+       H_onsite = np.array([
+           [0, J_ab_0, J_ac_0],
+           [J_ba_0, 0, J_bc_0],
+           [J_ca_0, J_cb_0, 0]
+       ]) * -2
 
        H_horizontal = np.array([
            [J_aa_1x, J_ab_1x, J_ac_1x],
@@ -483,8 +495,8 @@ def square_hamiltonian_driven(delta_a=0,
            [J_ca_2m, J_cb_2m, J_cc_2m]
        ]) * -2 * np.cos(np.vdot((k+A(t)),a_1 + a_2))
        
-       hamiltonian = (H_onsite + H_horizontal + H_vertical + H_diagonal_p + 
-                      H_diagonal_m)
+       hamiltonian = (H_offsets + H_onsite + H_horizontal + H_vertical 
+                      + H_diagonal_p + H_diagonal_m)
        return hamiltonian
     
     return H
