@@ -133,7 +133,8 @@ def plot_bandstructure2D(energy_grid,
                          bands_to_plot=np.array([True, True, True]),
                          lowest_quasi_energy=-np.pi,
                          regime='driven',
-                         discontinuity_threshold=0.05):
+                         discontinuity_threshold=0.05,
+                         show_plot=True):
     """Plots the bandstructure calculated from compute_bandstructure2D for 3 
     band systems
     
@@ -161,8 +162,10 @@ def plot_bandstructure2D(energy_grid,
         The bottom of the FBZ
     regime: str
         'driven'or 'static'
-    discontinuity_threshold = float
+    discontinuity_threshold: float
         The values to not plot near the upper and lower boundaries of the FBZ
+    show_plot: bool
+        Whether to show the plot
     """
     # Need to periodically extend the energy array to span the whole region
     b_1, b_2 = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
@@ -206,13 +209,13 @@ def plot_bandstructure2D(energy_grid,
     # Plotting
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     if bands_to_plot[0]:
-        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.spring,
+        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.YlGnBu,
                                 linewidth=0)
     if bands_to_plot[1]:
-        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.summer,
+        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.PuRd,
                                 linewidth=0)
     if bands_to_plot[2]:
-        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.winter,
+        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.YlOrRd,
                                 linewidth=0)
     tick_values = np.linspace(-4,4,9) * np.pi / 2
     tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
@@ -221,8 +224,10 @@ def plot_bandstructure2D(energy_grid,
     ax.set_yticks(tick_values)
     ax.set_yticklabels(tick_labels)
     if regime == 'driven':
+        ztick_labels = ['$-2\pi$', '$-3\pi/2$', '$-\pi$', '$-\pi/2$', '0', 
+                        '$\pi/2$', '$\pi$', '$3\pi/2$', '$2\pi$']
         ax.set_zticks(tick_values)
-        ax.set_zticklabels(tick_labels)
+        ax.set_zticklabels(ztick_labels)
     ax.set_zlim(np.nanmin(E),np.nanmax(E))
     ax.set_xlim(kxmin,kxmax)
     ax.set_ylim(kymin,kymax)
@@ -231,7 +236,8 @@ def plot_bandstructure2D(energy_grid,
     ax.grid(False)
     ax.set_box_aspect([1, 1, 2])
     plt.savefig(save)
-    plt.show()
+    if show_plot:
+        plt.show()
     plt.close()
 
     

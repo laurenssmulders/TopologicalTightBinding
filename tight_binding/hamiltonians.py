@@ -48,28 +48,46 @@ def kagome_hamiltonian_static(delta_a, delta_b, delta_c, J, a):
         return hamiltonian
     return H
 
-def square_hamiltonian_static(delta_a, 
-                              delta_b, 
-                              delta_c, 
-                              delta_ab, 
-                              delta_ac, 
-                              delta_bc, 
-                              J_a, 
-                              J_b, 
-                              J_c, 
-                              J_ab, 
-                              J_ac, 
-                              J_bc, 
-                              a):
-    """Defines a bloch hamiltonian for the equillibrium square lattice.
+def square_hamiltonian_static(delta_a=0, 
+                              delta_b=0, 
+                              delta_c=0, 
+                              J_ab_0=0, 
+                              J_ac_0=0, 
+                              J_bc_0=0, 
+                              J_aa_1x=0, 
+                              J_bb_1x=0, 
+                              J_cc_1x=0, 
+                              J_ab_1x=0, 
+                              J_ac_1x=0, 
+                              J_bc_1x=0,
+                              J_aa_1y=0, 
+                              J_bb_1y=0, 
+                              J_cc_1y=0, 
+                              J_ab_1y=0, 
+                              J_ac_1y=0, 
+                              J_bc_1y=0,
+                              J_aa_2p=0, 
+                              J_bb_2p=0, 
+                              J_cc_2p=0, 
+                              J_ab_2p=0, 
+                              J_ac_2p=0, 
+                              J_bc_2p=0,
+                              J_aa_2m=0, 
+                              J_bb_2m=0, 
+                              J_cc_2m=0, 
+                              J_ab_2m=0, 
+                              J_ac_2m=0, 
+                              J_bc_2m=0,
+                              a=1):
+    """Defines a bloch hamiltonian for the out-of-equillibrium square lattice.
     
     Parameters
     ----------
-    delta_a: float
+    delta_aa: float
         The on-site potential for the A orbital
-    delta_b: float
+    delta_bb: float
         The on-site potential for the B orbital
-    delta_c: float
+    delta_cc: float
         The on-site potential for the C orbital
     delta_ab: float
         The matrix element for the A and B orbitals at the same site
@@ -77,44 +95,143 @@ def square_hamiltonian_static(delta_a,
         The matrix element for the A and C orbitals at the same site
     delta_bc: float
         The matrix element for the B and C orbitals at the same site
-    J_a: float
-        The tunneling parameter between nn A orbitals
-    J_b: float
-        The tunneling parameter between nn B orbitals
-    J_b: float
-        The tunneling parameter between nn C orbitals
-    J_ab: float
-        The tunneling parameter between nn A and B orbitals
-    J_ac: float
-        The tunneling parameter between nn A and C orbitals
-    J_bc: float
-        The tunneling parameter between nn B and C orbitals
+    J_aa_1x: float
+        The tunneling parameter between nn A orbitals in the horizontal 
+        direction
+    J_bb_1x: float
+        The tunneling parameter between nn B orbitals in the horizontal 
+        direction
+    J_cc_1x: float
+        The tunneling parameter between nn C orbitals in the horizontal 
+        direction
+    J_ab_1x: float
+        The tunneling parameter between nn A and B orbitals in the horizontal 
+        direction
+    J_ac_1x: float
+        The tunneling parameter between nn A and C orbitals in the horizontal 
+        direction
+    J_bc_1x: float
+        The tunneling parameter between nn B and C orbitals in the horizontal 
+        direction
+    J_aa_1y: float
+        The tunneling parameter between nn A orbitals in the vertical direction
+    J_bb_1y: float
+        The tunneling parameter between nn B orbitals in the vertical direction
+    J_cc_1y: float
+        The tunneling parameter between nn C orbitals in the vertical direction
+    J_ab_1y: float
+        The tunneling parameter between nn A and B orbitals in the vertical 
+        direction
+    J_ac_1y: float
+        The tunneling parameter between nn A and C orbitals in the vertical 
+        direction
+    J_bc_1y: float
+        The tunneling parameter between nn B and C orbitals in the vertical 
+        direction
+    J_aa_2p: float
+        The tunneling parameter between nn A orbitals in the diagonal a1+a2 
+        direction
+    J_bb_2p: float
+        The tunneling parameter between nn B orbitals in the diagonal a1+a2 
+        direction
+    J_cc_2p: float
+        The tunneling parameter between nn C orbitals in the diagonal a1+a2 
+        direction
+    J_ab_2p: float
+        The tunneling parameter between nn A and B orbitals in the diagonal 
+        a1+a2 direction
+    J_ac_2p: float
+        The tunneling parameter between nn A and C orbitals in the diagonal 
+        a1+a2 direction
+    J_bc_2p: float
+        The tunneling parameter between nn B and C orbitals in the diagonal 
+        a1+a2 direction
+    J_aa_2m: float
+        The tunneling parameter between nn A orbitals in the diagonal a1-a2 
+        direction
+    J_bb_2m: float
+        The tunneling parameter between nn B orbitals in the diagonal a1-a2 
+        direction
+    J_cc_2m: float
+        The tunneling parameter between nn C orbitals in the diagonal a1-a2 
+        direction
+    J_ab_2m: float
+        The tunneling parameter between nn A and B orbitals in the diagonal 
+        a1-a2 direction
+    J_ac_2m: float
+        The tunneling parameter between nn A and C orbitals in the diagonal 
+        a1-a2 direction
+    J_bc_2m: float
+        The tunneling parameter between nn B and C orbitals in the diagonal 
+        a1-a2 direction
     a: float
-        THe lattice spacing
+        The lattice spacing
 
     Returns
     -------
     H: function
-        The square bloch hamiltonian as a function of quasimomentum k.
-    """
+        The square bloch hamiltonian as a function of quasimomentum k and 
+        time t"""
     a_1 = a*np.array([1,0])
     a_2 = a*np.array([0,1])
 
-    delta_ba = np.conjugate(delta_ab)
-    delta_ca = np.conjugate(delta_ac)
-    delta_cb = np.conjugate(delta_bc)
-    J_ba = np.conjugate(J_ab)
-    J_ca = np.conjugate(J_ac)
-    J_cb = np.conjugate(J_bc)
-
+    J_ba_0 = np.conjugate(J_ab_0)
+    J_ca_0 = np.conjugate(J_ac_0)
+    J_cb_0 = np.conjugate(J_bc_0)
+    J_ba_1x = np.conjugate(J_ab_1x)
+    J_ca_1x = np.conjugate(J_ac_1x)
+    J_cb_1x = np.conjugate(J_bc_1x)
+    J_ba_1y = np.conjugate(J_ab_1y)
+    J_ca_1y = np.conjugate(J_ac_1y)
+    J_cb_1y = np.conjugate(J_bc_1y)
+    J_ba_2p = np.conjugate(J_ab_2p)
+    J_ca_2p = np.conjugate(J_ac_2p)
+    J_cb_2p = np.conjugate(J_bc_2p)
+    J_ba_2m = np.conjugate(J_ab_2m)
+    J_ca_2m = np.conjugate(J_ac_2m)
+    J_cb_2m = np.conjugate(J_bc_2m)
+    
     def H(k):
-       c = np.cos(np.vdot(k,a_1)) + np.cos(np.vdot(k,a_2))
-       hamiltonian = np.array([
-           [delta_a - 2*c*J_a, delta_ab - 2*c*J_ab, delta_ac - 2*c*J_ac],
-           [delta_ba - 2*c*J_ba, delta_b - 2*c*J_b, delta_bc - 2*c*J_bc],
-           [delta_ca - 2*c*J_ca, delta_cb - 2*c*J_cb, delta_c - 2*c*J_c]
+       H_offsets = np.array([
+           [delta_a, 0, 0],
+           [0, delta_b, 0],
+           [0, 0, delta_c]
        ])
+
+       H_onsite = np.array([
+           [0, J_ab_0, J_ac_0],
+           [J_ba_0, 0, J_bc_0],
+           [J_ca_0, J_cb_0, 0]
+       ]) * -2
+
+       H_horizontal = np.array([
+           [J_aa_1x, J_ab_1x, J_ac_1x],
+           [J_ba_1x, J_bb_1x, J_bc_1x],
+           [J_ca_1x, J_cb_1x, J_cc_1x]
+       ]) * -2 * np.cos(np.vdot(k,a_1))
+
+       H_vertical = np.array([
+           [J_aa_1y, J_ab_1y, J_ac_1y],
+           [J_ba_1y, J_bb_1y, J_bc_1y],
+           [J_ca_1y, J_cb_1y, J_cc_1y]
+       ]) * -2 * np.cos(np.vdot(k,a_2))
+
+       H_diagonal_p = np.array([
+           [J_aa_2p, J_ab_2p, J_ac_2p],
+           [J_ba_2p, J_bb_2p, J_bc_2p],
+           [J_ca_2p, J_cb_2p, J_cc_2p]
+       ]) * -2 * np.cos(np.vdot(k,a_1 + a_2))
+
+       H_diagonal_m = np.array([
+           [J_aa_2m, J_ab_2m, J_ac_2m],
+           [J_ba_2m, J_bb_2m, J_bc_2m],
+           [J_ca_2m, J_cb_2m, J_cc_2m]
+       ]) * -2 * np.cos(np.vdot(k,a_1 - a_2))
+       
+       hamiltonian = (H_offsets + H_onsite + H_horizontal + H_vertical 
+                      + H_diagonal_p + H_diagonal_m)
        return hamiltonian
+    
     return H
 
 # 03 OUT-OF-EQUILLIBRIUM HAMILTONIANS
@@ -181,12 +298,12 @@ def kagome_hamiltonian_driven(delta_a,
         return hamiltonian
     return H
 
-def square_hamiltonian_driven(delta_aa=0, 
-                              delta_bb=0, 
-                              delta_cc=0, 
-                              delta_ab=0, 
-                              delta_ac=0, 
-                              delta_bc=0, 
+def square_hamiltonian_driven(delta_a=0, 
+                              delta_b=0, 
+                              delta_c=0, 
+                              J_ab_0=0, 
+                              J_ac_0=0, 
+                              J_bc_0=0, 
                               J_aa_1x=0, 
                               J_bb_1x=0, 
                               J_cc_1x=0, 
@@ -199,12 +316,18 @@ def square_hamiltonian_driven(delta_aa=0,
                               J_ab_1y=0, 
                               J_ac_1y=0, 
                               J_bc_1y=0,
-                              J_aa_2=0, 
-                              J_bb_2=0, 
-                              J_cc_2=0, 
-                              J_ab_2=0, 
-                              J_ac_2=0, 
-                              J_bc_2=0,  
+                              J_aa_2p=0, 
+                              J_bb_2p=0, 
+                              J_cc_2p=0, 
+                              J_ab_2p=0, 
+                              J_ac_2p=0, 
+                              J_bc_2p=0,
+                              J_aa_2m=0, 
+                              J_bb_2m=0, 
+                              J_cc_2m=0, 
+                              J_ab_2m=0, 
+                              J_ac_2m=0, 
+                              J_bc_2m=0,  
                               A_x=0, 
                               A_y=0, 
                               omega=0, 
@@ -259,21 +382,42 @@ def square_hamiltonian_driven(delta_aa=0,
     J_bc_1y: float
         The tunneling parameter between nn B and C orbitals in the vertical 
         direction
-    J_aa_2: float
-        The tunneling parameter between nn A orbitals in the diagonal direction
-    J_bb_2: float
-        The tunneling parameter between nn B orbitals in the diagonal direction
-    J_cc_2: float
-        The tunneling parameter between nn C orbitals in the diagonal direction
-    J_ab_2: float
+    J_aa_2p: float
+        The tunneling parameter between nn A orbitals in the diagonal a1+a2 
+        direction
+    J_bb_2p: float
+        The tunneling parameter between nn B orbitals in the diagonal a1+a2 
+        direction
+    J_cc_2p: float
+        The tunneling parameter between nn C orbitals in the diagonal a1+a2 
+        direction
+    J_ab_2p: float
         The tunneling parameter between nn A and B orbitals in the diagonal 
-        direction
-    J_ac_2: float
+        a1+a2 direction
+    J_ac_2p: float
         The tunneling parameter between nn A and C orbitals in the diagonal 
-        direction
-    J_bc_2: float
+        a1+a2 direction
+    J_bc_2p: float
         The tunneling parameter between nn B and C orbitals in the diagonal 
+        a1+a2 direction
+    J_aa_2m: float
+        The tunneling parameter between nn A orbitals in the diagonal a1-a2 
         direction
+    J_bb_2m: float
+        The tunneling parameter between nn B orbitals in the diagonal a1-a2 
+        direction
+    J_cc_2m: float
+        The tunneling parameter between nn C orbitals in the diagonal a1-a2 
+        direction
+    J_ab_2m: float
+        The tunneling parameter between nn A and B orbitals in the diagonal 
+        a1-a2 direction
+    J_ac_2m: float
+        The tunneling parameter between nn A and C orbitals in the diagonal 
+        a1-a2 direction
+    J_bc_2m: float
+        The tunneling parameter between nn B and C orbitals in the diagonal 
+        a1-a2 direction
     A_x: float
         The amplitude of the x component of the driving vector potential
     A_y: float
@@ -293,18 +437,21 @@ def square_hamiltonian_driven(delta_aa=0,
     a_1 = a*np.array([1,0])
     a_2 = a*np.array([0,1])
 
-    delta_ba = np.conjugate(delta_ab)
-    delta_ca = np.conjugate(delta_ac)
-    delta_cb = np.conjugate(delta_bc)
+    J_ba_0 = np.conjugate(J_ab_0)
+    J_ca_0 = np.conjugate(J_ac_0)
+    J_cb_0 = np.conjugate(J_bc_0)
     J_ba_1x = np.conjugate(J_ab_1x)
     J_ca_1x = np.conjugate(J_ac_1x)
     J_cb_1x = np.conjugate(J_bc_1x)
     J_ba_1y = np.conjugate(J_ab_1y)
     J_ca_1y = np.conjugate(J_ac_1y)
     J_cb_1y = np.conjugate(J_bc_1y)
-    J_ba_2 = np.conjugate(J_ab_2)
-    J_ca_2 = np.conjugate(J_ac_2)
-    J_cb_2 = np.conjugate(J_bc_2)
+    J_ba_2p = np.conjugate(J_ab_2p)
+    J_ca_2p = np.conjugate(J_ac_2p)
+    J_cb_2p = np.conjugate(J_bc_2p)
+    J_ba_2m = np.conjugate(J_ab_2m)
+    J_ca_2m = np.conjugate(J_ac_2m)
+    J_cb_2m = np.conjugate(J_bc_2m)
 
     def A(time):
         drive = np.array([A_x*np.cos(omega*time), 
@@ -312,11 +459,17 @@ def square_hamiltonian_driven(delta_aa=0,
         return drive
     
     def H(k,t):
-       H_onsite = np.array([
-           [delta_aa, delta_ab, delta_ac],
-           [delta_ba, delta_bb, delta_bc],
-           [delta_ca, delta_cb, delta_cc]
+       H_offsets = np.array([
+           [delta_a, 0, 0],
+           [0, delta_b, 0],
+           [0, 0, delta_c]
        ])
+
+       H_onsite = np.array([
+           [0, J_ab_0, J_ac_0],
+           [J_ba_0, 0, J_bc_0],
+           [J_ca_0, J_cb_0, 0]
+       ]) * -2
 
        H_horizontal = np.array([
            [J_aa_1x, J_ab_1x, J_ac_1x],
@@ -330,14 +483,20 @@ def square_hamiltonian_driven(delta_aa=0,
            [J_ca_1y, J_cb_1y, J_cc_1y]
        ]) * -2 * np.cos(np.vdot((k+A(t)),a_2))
 
-       H_diagonal = np.array([
-           [J_aa_2, J_ab_2, J_ac_2],
-           [J_ba_2, J_bb_2, J_bc_2],
-           [J_ca_2, J_cb_2, J_cc_2]
-       ]) * -2 * (np.cos(np.vdot((k+A(t)),a_1 + a_2)) 
-                  + np.cos(np.vdot((k+A(t)),a_1 - a_2)))
+       H_diagonal_p = np.array([
+           [J_aa_2p, J_ab_2p, J_ac_2p],
+           [J_ba_2p, J_bb_2p, J_bc_2p],
+           [J_ca_2p, J_cb_2p, J_cc_2p]
+       ]) * -2 * np.cos(np.vdot((k+A(t)),a_1 + a_2))
+
+       H_diagonal_m = np.array([
+           [J_aa_2m, J_ab_2m, J_ac_2m],
+           [J_ba_2m, J_bb_2m, J_bc_2m],
+           [J_ca_2m, J_cb_2m, J_cc_2m]
+       ]) * -2 * np.cos(np.vdot((k+A(t)),a_1 + a_2))
        
-       hamiltonian = H_onsite + H_horizontal + H_vertical + H_diagonal
+       hamiltonian = (H_offsets + H_onsite + H_horizontal + H_vertical 
+                      + H_diagonal_p + H_diagonal_m)
        return hamiltonian
     
     return H
