@@ -2,16 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tight_binding.hamiltonians import square_hamiltonian_driven
 from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstructure2D
-from tight_binding.topology import compute_zak_phase, locate_dirac_strings
+from tight_binding.topology import compute_zak_phase, locate_dirac_strings, locate_nodes
 
-plotting = False
-slicing = True
+plotting = True
+slicing = False
 zak = False
 locate_ds = False
 
 # PARAMETERS
-delta_A = -2
-delta_C = -2
+delta_A = 0
+delta_C = 0
 omega = 10
 A_x = 1
 
@@ -47,10 +47,12 @@ if plotting:
                                                      omega, num_steps, 
                                                      lowest_quasi_energy)
 
-    plot_bandstructure2D(energies, a_1, a_2, 'test.png', 
-                         bands_to_plot = [1,1,1], 
-                         lowest_quasi_energy=lowest_quasi_energy, 
-                         discontinuity_threshold = 0.05)
+    locate_nodes(energies, 0.01*np.pi, a_1, a_2)
+
+    #plot_bandstructure2D(energies, a_1, a_2, 'test.png', 
+    #                     bands_to_plot = [1,1,1], 
+    #                     lowest_quasi_energy=lowest_quasi_energy, 
+    #                     discontinuity_threshold = 0.05)
 
 # ZAK PHASE
 if zak:
