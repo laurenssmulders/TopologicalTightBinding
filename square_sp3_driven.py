@@ -1,17 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from tight_binding.hamiltonians import square_hamiltonian_driven
-from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstructure2D
-from tight_binding.topology import compute_zak_phase, locate_dirac_strings, locate_nodes
+from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstructure2D, locate_nodes
+from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
-plotting = True
+plotting = False
 slicing = False
-zak = False
+zak = True
 locate_ds = False
 
 # PARAMETERS
-delta_A = 0
-delta_C = 0
+delta_A = 5
+delta_C = -5
 omega = 10
 A_x = 1
 
@@ -47,17 +47,16 @@ if plotting:
                                                      omega, num_steps, 
                                                      lowest_quasi_energy)
 
-    locate_nodes(energies, 0.01*np.pi, a_1, a_2)
 
-    #plot_bandstructure2D(energies, a_1, a_2, 'test.png', 
-    #                     bands_to_plot = [1,1,1], 
-    #                     lowest_quasi_energy=lowest_quasi_energy, 
-    #                     discontinuity_threshold = 0.05)
+    plot_bandstructure2D(energies, a_1, a_2, 'test.png', 
+                         bands_to_plot = [1,1,1], 
+                         lowest_quasi_energy=lowest_quasi_energy, 
+                         discontinuity_threshold = 0.05)
 
 # ZAK PHASE
 if zak:
-    start = np.array([0.1,0])
-    end = np.array([1.1,1])
+    start = np.array([0,0])
+    end = np.array([1,1])
 
     zak_phase, energies = compute_zak_phase(H, a_1, a_2, offsets, start, end, 
                                             num_points, omega, num_steps, 
@@ -67,8 +66,8 @@ if zak:
 
 # LOCATING DIRAC STRINGS
 if locate_ds:
-    direction = np.array([1,1])
-    perpendicular_direction = np.array([0.5,-0.5])
+    direction = np.array([1,0])
+    perpendicular_direction = np.array([0,1])
     locate_dirac_strings(H, direction, perpendicular_direction, num_lines, 
                          'test.png', a_1, a_2, offsets, num_points, omega, 
                          num_steps, lowest_quasi_energy)

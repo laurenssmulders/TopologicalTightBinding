@@ -2,15 +2,17 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from tight_binding.hamiltonians import square_hamiltonian_driven
-from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstructure2D
+from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstructure2D, locate_nodes
 from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
-plotting = False
-slicing = True
+plotting = True
+slicing = False
+nodes = True
 locate_ds = False
 
+
 # SAVING
-main_directory = 'figures/square/SP3/driven/bandstructures/scan1'
+main_directory = 'figures/square/SP3/driven/bandstructures/scan2'
 
 # LOCATE DIRAC STRINGS
 directions = np.array([
@@ -28,8 +30,8 @@ perpendicular_directions = np.array([
 ])
 
 # PARAMETERS
-delta_A_scan = np.array([-2,-1,0,1,2])
-delta_C_scan = np.array([-2,-1,0,1,2])
+delta_A_scan = np.array([5])
+delta_C_scan = np.array([-5])
 omega = 10
 A_x = 1
 
@@ -54,7 +56,7 @@ for i in range(len(delta_A_scan)):
         )
         
         directory = main_directory + '/' + name
-        #os.mkdir(directory)
+        os.mkdir(directory)
 
         # BLOCH HAMILTONIAN
         H = square_hamiltonian_driven(
@@ -76,6 +78,11 @@ for i in range(len(delta_A_scan)):
             energies, blochvectors = compute_bandstructure2D(H, a_1, a_2, num_points, 
                                                             omega, num_steps, 
                                                             lowest_quasi_energy)
+            
+            grid_dir = directory + '/' + name + '_grids'
+            os.mkdir(grid_dir)
+            np.save(grid_dir + '/' + name + '_grid', energies)
+
             save = directory + '/' + name + '.png'
             plot_bandstructure2D(energies, a_1, a_2, save, 
                                 bands_to_plot = [1,1,1], 
@@ -99,6 +106,15 @@ for i in range(len(delta_A_scan)):
                                 bands_to_plot = [0,0,1], 
                                 lowest_quasi_energy=lowest_quasi_energy, 
                                 discontinuity_threshold = 0.05, show_plot=False)
+
+        # LOCATING NODES
+        if nodes:
+            node_dir = directory + '/' + name + '_nodes'
+            os.mkdir(node_dir)
+            locate_nodes(energies, a_1, a_2, node_dir + '/' + name + '_nodes',
+                         show_plot=False)
+            
+
 
         # LOCATING DIRAC STRINGS
         if locate_ds:

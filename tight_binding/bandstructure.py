@@ -240,6 +240,127 @@ def plot_bandstructure2D(energy_grid,
         plt.show()
     plt.close()
 
+def locate_nodes(energy_grid,
+                 a_1,
+                 a_2,
+                 save,
+                 node_threshold = 0.05,
+                 kxmin=-np.pi, 
+                 kxmax=np.pi, 
+                 kymin=-np.pi, 
+                 kymax=np.pi,
+                 regime='driven',
+                 show_plot=True):
+    """Plots the nodes in the each band gap for a given band structure.
+    
+    Parameters
+    ----------
+    energy_grid: numpy.ndarray
+        The energies to find the nodes from
+    a_1: numpy.ndarray
+        The first lattice vector
+    a_2: numpy.ndarray
+        The second lattice vector
+    save: str
+        The place to save the plot
+    node_threshold: float
+        How close the bands have to be to each other for a point to be 
+        considered a node
+    kxmin: float
+        The minimum kx value to plot
+    kxmax: float
+        The maximum kx value to plot
+    kymin: float
+        The minimum ky value to plot
+    kymax: float
+        The maximum ky value to plot
+    regime: str
+        'driven'or 'static'
+    show_plot: bool
+        Whether to show the plot
+    """
+    # Need to periodically extend the energy array to span the whole region
+    b_1, b_2 = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
+    num_points = energy_grid.shape[0]
+    dim = energy_grid.shape[2]
+    span = False
+    copies = 0
+    while not span:
+        copies += 1
+        alpha = np.linspace(-copies,copies,2*copies*num_points,endpoint=False)
+        alpha_1, alpha_2 = np.meshgrid(alpha, alpha, indexing = 'ij')
+        kx = alpha_1 * b_1[0] + alpha_2 * b_2[0]
+        ky = alpha_1 * b_1[1] + alpha_2 * b_2[1]
+        span = ((np.min(kx) < kxmin) and (np.max(kx) > kxmax) 
+                    and (np.min(ky) < kymin) and (np.max(ky) > kymax))
+        
+    # Specifying which indices in the original array correspond to indices in 
+    # the extended array
+    i = ((alpha_1%1) * num_points).astype(int)
+    j = ((alpha_2%1) * num_points).astype(int)
+    energy_grid_extended = energy_grid[i,j]
+    E = np.transpose(energy_grid_extended, (2,0,1))
+
+    if regime == 'driven':
+        gap_1 = (E[1] - E[0]) % (2*np.pi)
+        gap_2 = (E[2] - E[1]) % (2*np.pi)
+        gap_3 = (E[0] - E[2]) % (2*np.pi)
+
+        gap_1 = abs((gap_1 + 2*np.pi*np.floor((-np.pi - gap_1) / (2*np.pi) + 1)))
+        gap_2 = abs((gap_2 + 2*np.pi*np.floor((-np.pi - gap_2) / (2*np.pi) + 1)))
+        gap_3 = abs((gap_3 + 2*np.pi*np.floor((-np.pi - gap_3) / (2*np.pi) + 1)))
+    else:
+        print('Static regime not implemented yet.')
+
+    gap_1 = gap_1 < node_threshold
+    gap_2 = gap_2 < node_threshold
+    gap_3 = gap_3 < node_threshold
+
+    gap_1_nodes_kx = []
+    gap_2_nodes_kx = []
+    gap_3_nodes_kx = []
+    gap_1_nodes_ky = []
+    gap_2_nodes_ky = []
+    gap_3_nodes_ky = []
+    
+
+    for i in range(gap_1.shape[0]):
+        for j in range(gap_1.shape[1]):
+            if gap_1[i,j]:
+                gap_1_nodes_kx.append(kx[i,j])
+                gap_1_nodes_ky.append(ky[i,j])
+    
+    for i in range(gap_2.shape[0]):
+        for j in range(gap_2.shape[1]):
+            if gap_2[i,j]:
+                gap_2_nodes_kx.append(kx[i,j])
+                gap_2_nodes_ky.append(ky[i,j])
+    
+    for i in range(gap_3.shape[0]):
+        for j in range(gap_3.shape[1]):
+            if gap_3[i,j]:
+                gap_3_nodes_kx.append(kx[i,j])
+                gap_3_nodes_ky.append(ky[i,j])
+
+    fig = plt.figure()
+    plt.scatter(gap_1_nodes_kx, gap_1_nodes_ky, label='Gap 1')
+    plt.scatter(gap_2_nodes_kx, gap_2_nodes_ky, label='Gap 2')
+    plt.scatter(gap_3_nodes_kx, gap_3_nodes_ky, label='Gap 3')
+    plt.legend()
+    plt.xlim(kxmin, kxmax)
+    plt.ylim(kymin, kymax)
+    ticks = [-np.pi, -0.5*np.pi, 0, 0.5*np.pi, np.pi]
+    tick_labels = ['$-\pi$', '', '', '', '$\pi$']
+    plt.xticks(ticks, tick_labels)
+    plt.yticks(ticks, tick_labels)
+    plt.xlabel('$k_x$')
+    plt.ylabel('$k_y$')
+    plt.gca().set_aspect('equal')
+    if show_plot:
+        plt.show()
+    plt.savefig(save)
+    plt.close()
+
     
 
 
