@@ -4,14 +4,14 @@ from tight_binding.hamiltonians import square_hamiltonian_driven
 from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstructure2D, locate_nodes
 from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
-plotting = False
+plotting = True
 slicing = False
-zak = True
+zak = False
 locate_ds = False
 
 # PARAMETERS
-delta_A = 5
-delta_C = -5
+delta_A = 0
+delta_C = 0
 omega = 10
 A_x = 1
 

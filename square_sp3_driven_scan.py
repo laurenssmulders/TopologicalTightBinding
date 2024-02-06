@@ -12,7 +12,7 @@ locate_ds = False
 
 
 # SAVING
-main_directory = 'figures/square/SP3/driven/bandstructures/scan2'
+main_directory = 'figures/square/SP3/driven/bandstructures/scan3'
 
 # LOCATE DIRAC STRINGS
 directions = np.array([
@@ -30,8 +30,8 @@ perpendicular_directions = np.array([
 ])
 
 # PARAMETERS
-delta_A_scan = np.array([5])
-delta_C_scan = np.array([-5])
+delta_A_scan = np.array([-2,0,2])
+delta_C_scan = np.array([4])
 omega = 10
 A_x = 1
 
