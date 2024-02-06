@@ -250,7 +250,8 @@ def locate_nodes(energy_grid,
                  kymin=-np.pi, 
                  kymax=np.pi,
                  regime='driven',
-                 show_plot=True):
+                 show_plot=True,
+                 title= ''):
     """Plots the nodes in the each band gap for a given band structure.
     
     Parameters
@@ -278,6 +279,8 @@ def locate_nodes(energy_grid,
         'driven'or 'static'
     show_plot: bool
         Whether to show the plot
+    title: str
+        Plot title
     """
     # Need to periodically extend the energy array to span the whole region
     b_1, b_2 = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
@@ -356,6 +359,7 @@ def locate_nodes(energy_grid,
     plt.xlabel('$k_x$')
     plt.ylabel('$k_y$')
     plt.gca().set_aspect('equal')
+    plt.title(title)
     if show_plot:
         plt.show()
     plt.savefig(save)

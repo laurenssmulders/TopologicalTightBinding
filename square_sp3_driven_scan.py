@@ -12,7 +12,7 @@ locate_ds = False
 
 
 # SAVING
-main_directory = 'figures/square/SP3/driven/bandstructures/scan3'
+main_directory = 'figures/square/SP3/driven/bandstructures'
 
 # LOCATE DIRAC STRINGS
 directions = np.array([
@@ -30,8 +30,8 @@ perpendicular_directions = np.array([
 ])
 
 # PARAMETERS
-delta_A_scan = np.array([-2,0,2])
-delta_C_scan = np.array([4])
+delta_A_scan = np.array([-11,-9,-7,-5,-3])
+delta_C_scan = np.array([-3,-1,1,3,5])
 omega = 10
 A_x = 1
 
@@ -56,7 +56,8 @@ for i in range(len(delta_A_scan)):
         )
         
         directory = main_directory + '/' + name
-        os.mkdir(directory)
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
 
         # BLOCH HAMILTONIAN
         H = square_hamiltonian_driven(
@@ -80,7 +81,8 @@ for i in range(len(delta_A_scan)):
                                                             lowest_quasi_energy)
             
             grid_dir = directory + '/' + name + '_grids'
-            os.mkdir(grid_dir)
+            if not os.path.isdir(grid_dir):
+                os.mkdir(grid_dir)
             np.save(grid_dir + '/' + name + '_grid', energies)
 
             save = directory + '/' + name + '.png'
@@ -110,16 +112,21 @@ for i in range(len(delta_A_scan)):
         # LOCATING NODES
         if nodes:
             node_dir = directory + '/' + name + '_nodes'
-            os.mkdir(node_dir)
+            if not os.path.isdir(node_dir):
+                os.mkdir(node_dir)
+            title = '$\Delta_A={delta_A}, \Delta_C={delta_C}$'.format(
+                delta_A=delta_A, delta_C=delta_C
+            )
             locate_nodes(energies, a_1, a_2, node_dir + '/' + name + '_nodes',
-                         show_plot=False)
+                         show_plot=False, title=title)
             
 
 
         # LOCATING DIRAC STRINGS
         if locate_ds:
             ds_dir = directory + '/' + name + '_ds'
-            os.mkdir(ds_dir)
+            if not os.path.isdir(ds_dir):
+                os.mkdir(ds_dir)
 
             for k in range(len(directions)):
                 direction = directions[k]
@@ -138,10 +145,12 @@ for i in range(len(delta_A_scan)):
 
         if slicing:
             slice_dir = directory + '/' + name + '_sliced'
-            os.mkdir(slice_dir)
+            if not os.path.isdir(slice_dir):
+                os.mkdir(slice_dir)
             ## X slices
             xslice_dir = slice_dir + '/xslices'
-            os.mkdir(xslice_dir)
+            if not os.path.isdir(xslice_dir):
+                os.mkdir(xslice_dir)
             for k in range(100):
                 save = xslice_dir + '/' + name + '_xslice{k}'.format(k=k)  + '.png'
                 start = np.array([k / 100, 0])
@@ -171,7 +180,8 @@ for i in range(len(delta_A_scan)):
 
             # Y slices
             yslice_dir = slice_dir + '/yslices'
-            os.mkdir(yslice_dir)
+            if not os.path.isdir(yslice_dir):
+                os.mkdir(yslice_dir)
             for k in range(100):
                 save = yslice_dir + '/' + name + '_yslice{k}'.format(k=k)  + '.png'
                 start = np.array([0, k / 100])

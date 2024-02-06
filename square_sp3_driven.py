@@ -4,14 +4,14 @@ from tight_binding.hamiltonians import square_hamiltonian_driven
 from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstructure2D, locate_nodes
 from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
-plotting = True
+plotting = False
 slicing = False
-zak = False
+zak = True
 locate_ds = False
 
 # PARAMETERS
-delta_A = 0
-delta_C = 0
+delta_A = -7
+delta_C = 1
 omega = 10
 A_x = 1
 
@@ -56,13 +56,24 @@ if plotting:
 # ZAK PHASE
 if zak:
     start = np.array([0,0])
-    end = np.array([1,1])
+    end = np.array([1,-1])
 
     zak_phase, energies = compute_zak_phase(H, a_1, a_2, offsets, start, end, 
                                             num_points, omega, num_steps, 
                                             lowest_quasi_energy)
     zak_phase = np.rint(np.real(zak_phase / np.pi))
     print(zak_phase)
+    fig = plt.figure()
+    plt.plot(energies[:,0], label='band 0')
+    plt.plot(energies[:,1], label='band 1')
+    plt.plot(energies[:,2], label='band 2')
+    plt.legend()
+    plt.title('{zak_phase}'.format(zak_phase=zak_phase))
+    plt.xlabel('$k_y$')
+    plt.ylabel('$E / J$')
+    plt.show()
+    plt.close()
+
 
 # LOCATING DIRAC STRINGS
 if locate_ds:
