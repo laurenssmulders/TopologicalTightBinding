@@ -30,8 +30,7 @@ perpendicular_directions = np.array([
 ])
 
 # PARAMETERS
-delta_A_scan = np.array([-11,-9,-7,-5,-3])
-delta_C_scan = np.array([-3,-1,1,3,5])
+delta_A_scan = np.array([-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-0.5,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5])
 omega = 10
 A_x = 1
 
@@ -46,9 +45,10 @@ offsets = np.zeros((3,2))
 
 
 for i in range(len(delta_A_scan)):
-    for j in range(len(delta_C_scan)):
+    print(i)
+    for j in range(1):
         delta_A = delta_A_scan[i]
-        delta_C = delta_C_scan[j]
+        delta_C = delta_A
         delta_B = - delta_A - delta_C
 
         name = 'SP3_driven_Ax_w_dA_dC_{A_x}_{omega}_{delta_A}_{delta_C}'.format(
@@ -117,7 +117,7 @@ for i in range(len(delta_A_scan)):
             title = '$\Delta_A={delta_A}, \Delta_C={delta_C}$'.format(
                 delta_A=delta_A, delta_C=delta_C
             )
-            locate_nodes(energies, a_1, a_2, node_dir + '/' + name + '_nodes',
+            locate_nodes(energies, a_1, a_2, node_dir + '/' + name + '_nodes.png',
                          show_plot=False, title=title)
             
 
