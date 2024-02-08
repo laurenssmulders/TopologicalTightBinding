@@ -6,15 +6,15 @@ from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstruct
 from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
 plotting = False
-slicing = True
+slicing = False
 zak = True
 locate_ds = False
 
 
 
 # PARAMETERS
-delta_A = -11
-delta_C = 1
+delta_A = 5
+delta_C = 5
 omega = 10
 A_x = 1
 
@@ -67,7 +67,7 @@ if plotting:
 # ZAK PHASE
 if zak:
     start = np.array([0,0])
-    end = np.array([1,0])
+    end = np.array([1,-1])
 
     zak_phase, energies = compute_zak_phase(H, a_1, a_2, offsets, start, end, 
                                             num_points, omega, num_steps, 

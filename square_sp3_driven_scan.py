@@ -48,7 +48,7 @@ for i in range(len(delta_A_scan)):
     print(i)
     for j in range(1):
         delta_A = delta_A_scan[i]
-        delta_C = delta_A
+        delta_C = 0
         delta_B = - delta_A - delta_C
 
         name = 'SP3_driven_Ax_w_dA_dC_{A_x}_{omega}_{delta_A}_{delta_C}'.format(
