@@ -6,12 +6,12 @@ from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
 plotting = True
 slicing = False
-zak = False
+zak = True
 locate_ds = False
 
 # PARAMETERS
-delta_A = 0
-delta_C = 0
+delta_A = -7
+delta_C = 1
 
 delta_B = - delta_A - delta_C
 
@@ -43,8 +43,8 @@ if plotting:
 
 # ZAK PHASE
 if zak:
-    start = np.array([0.1,0])
-    end = np.array([1.1,1])
+    start = np.array([0,0])
+    end = np.array([1,0])
 
     offsets = np.zeros((3,2))
     zak_phase, energies = compute_zak_phase(H, a_1, a_2, offsets, start, end, 

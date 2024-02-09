@@ -12,7 +12,7 @@ a_2 = np.array([0,1])
 num_points = 50
 
 def find_nodes(energy_grid,
-                node_threshold = 1,
+                node_threshold = 0.5,
                 kxmin=-np.pi, 
                 kxmax=np.pi, 
                 kymin=-np.pi, 
@@ -117,8 +117,8 @@ axA = fig.add_axes([0.25, 0.1, 0.65, 0.03])
 A_slider = Slider(
     ax=axA,
     label='$\Delta_A$',
-    valmin=-5,
-    valmax=5,
+    valmin=-15,
+    valmax=15,
     valinit=init_A,
 )
 
@@ -127,8 +127,8 @@ axC = fig.add_axes([0.25, 0.05, 0.65, 0.03])
 C_slider = Slider(
     ax=axC,
     label="$\Delta_C$",
-    valmin=-5,
-    valmax=5,
+    valmin=-15,
+    valmax=15,
     valinit=init_C
 )
 
