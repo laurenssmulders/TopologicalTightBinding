@@ -2,7 +2,7 @@ import numpy as np
 from tight_binding.bandstructure import locate_nodes, plot_bandstructure2D
 from tight_binding.topology import locate_dirac_strings
 
-name = 'SP3_driven_Ax_w_dA_dC_1_10_4.5_4.5'
+name = 'SP3_driven_Ax_w_dA_dC_1_10_-4_4'
 file = 'figures/square/SP3/driven/bandstructures/' + name + '/' + name + '_grids/' + name + '_grid.npy'
 energies = np.load(file)
 
