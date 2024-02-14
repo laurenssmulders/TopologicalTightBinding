@@ -13,7 +13,7 @@ locate_ds = False
 
 
 # PARAMETERS
-delta_A = -0.4
+delta_A = -0.5
 delta_C = -7.6
 omega = 10
 A_x = 1
