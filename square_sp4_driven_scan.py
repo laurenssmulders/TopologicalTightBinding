@@ -30,9 +30,11 @@ perpendicular_directions = np.array([
 ])
 
 # PARAMETERS
-delta_A_scan = np.array([0])
-delta_C_scan = np.array([0])
-omega = 10
+delta_A_scan = np.array([-0.5,0,0.5])
+delta_C_scan = np.array([-0.5,0,0.5])
+delta_A_centre = 0
+delta_C_centre = 0
+omega = 11
 A_x = 1
 A_y = 1
 
@@ -49,8 +51,8 @@ offsets = np.zeros((3,2))
 for i in range(len(delta_A_scan)):
     print(i)
     for j in range(len(delta_C_scan)):
-        delta_A = delta_A_scan[i]
-        delta_C = delta_C_scan[j]
+        delta_A = delta_A_centre + delta_A_scan[i]
+        delta_C = delta_C_centre + delta_C_scan[j]
         delta_B = - delta_A - delta_C
 
         name = 'SP4_driven_Ax_Ay_w_dA_dC_{A_x}_{A_y}_{omega}_{delta_A}_{delta_C}'.format(
