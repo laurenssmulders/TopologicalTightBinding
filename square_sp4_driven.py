@@ -15,7 +15,7 @@ locate_ds = False
 # PARAMETERS
 delta_A = 0
 delta_C = 0
-omega = 20
+omega = 11
 A_x = 1
 A_y = 1
 
@@ -68,8 +68,8 @@ if plotting:
 
 # ZAK PHASE
 if zak:
-    start = np.array([0.5,0])
-    end = np.array([0.5,1])
+    start = np.array([0,0])
+    end = np.array([0,1])
 
     zak_phase, energies = compute_zak_phase(H, a_1, a_2, offsets, start, end, 
                                             num_points, omega, num_steps, 
