@@ -30,7 +30,8 @@ perpendicular_directions = np.array([
 ])
 
 # PARAMETERS
-scan = [np.array([3.1,-4.6]),np.array([3.6,-4.6]),np.array([2.6,-4.1]),np.array([2.6,-3.6])]
+delta_A_scan = np.array([-0.4])
+delta_C_scan = np.array([-7.6])
 omega = 10
 A_x = 1
 
@@ -44,11 +45,11 @@ lowest_quasi_energy = -np.pi / 4
 offsets = np.zeros((3,2))
 
 
-for i in range(len(scan)):
+for i in range(len(delta_A_scan)):
     print(i)
-    for j in range(1):
-        delta_A = scan[i][0]
-        delta_C = scan[i][1]
+    for j in range(len(delta_C_scan)):
+        delta_A = delta_A_scan[i]
+        delta_C = delta_C_scan[j]
         delta_B = - delta_A - delta_C
 
         name = 'SP3_driven_Ax_w_dA_dC_{A_x}_{omega}_{delta_A}_{delta_C}'.format(
