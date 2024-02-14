@@ -349,7 +349,6 @@ def locate_nodes(energy_grid,
     plt.scatter(gap_1_nodes_kx, gap_1_nodes_ky, label='Gap 1')
     plt.scatter(gap_2_nodes_kx, gap_2_nodes_ky, label='Gap 2')
     plt.scatter(gap_3_nodes_kx, gap_3_nodes_ky, label='Gap 3')
-    plt.legend()
     plt.xlim(kxmin, kxmax)
     plt.ylim(kymin, kymax)
     ticks = [-np.pi, -0.5*np.pi, 0, 0.5*np.pi, np.pi]
