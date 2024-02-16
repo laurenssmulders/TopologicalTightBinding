@@ -244,4 +244,16 @@ def locate_dirac_strings(hamiltonian,
     plt.savefig(save)
     plt.close()
 
-
+def compute_patch_euler_class(hamiltonian,
+                              a_1,
+                              a_2,
+                              offsets,
+                              start,
+                              end,
+                              num_points,
+                              omega=0,
+                              num_steps=0,
+                              lowest_quasi_energy = -np.pi,
+                              method='trotter',
+                              regime='driven'):
+    dd
