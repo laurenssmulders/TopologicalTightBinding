@@ -7,6 +7,123 @@ from matplotlib import cm
 from .diagonalise import compute_eigenstates
 from .utilitities import compute_reciprocal_lattice_vectors_2D
 
+def sort_energy_path(energies, blochvectors, 
+                     regime='driven'):
+    """Assigns the energies and blochvectors to the right bands for a 1D path of
+    energies.
+    
+    Parameters
+    ----------
+    energy_grid: numpy array
+        The grid with all the energies
+    blochvector_grid: numpy array
+        The grid with all the blochvectors
+    regime: str
+        'driven' or 'static'
+
+    Returns
+    -------
+    energies_sorted: numpy array
+    blochvectors_sorted: numpy array
+    """
+    if regime == 'driven':
+        for i in range(energies.shape[0]):
+            if i == 0:
+                ind = np.argsort(energies[i])
+                energies[i] = energies[i,ind]
+                blochvectors[i] = blochvectors[i][:,ind]
+            else:
+                ind = np.argsort(energies[i])
+                differences = np.zeros((3,), dtype='float')
+                for shift in range(3):
+                    ind_roll = np.roll(ind,shift)
+                    diff = ((energies[i,ind_roll] - energies[i-1])
+                            % (2*np.pi))
+                    diff = (diff + 2*np.pi*np.floor((-np.pi-diff) 
+                                                    / (2*np.pi) + 1))
+                    diff = np.abs(diff)
+                    diff = np.sum(diff)
+                    differences[shift] = diff
+                minimum = np.argmin(differences)
+                ind = np.roll(ind, minimum)
+                energies[i] = energies[i,ind]
+                blochvectors[i] = blochvectors[i][:,ind]
+    elif regime == 'static':
+        for i in range(energies.shape[0]):
+            ind = np.argsort(energies[i])
+            energies[i] = energies[i,ind]
+            blochvectors[i] = blochvectors[i][:,ind]
+
+def sort_energy_grid(energy_grid,
+                     blochvector_grid,
+                     regime='driven'):
+    """Assigns the energies and blochvectors to the right bands for a 2D grid of
+    energies.
+    
+    Parameters
+    ----------
+    energy_grid: numpy array
+        The grid with all the energies
+    blochvector_grid: numpy array
+        The grid with all the blochvectors
+    regime: str
+        'driven' or 'static'
+
+    Returns
+    -------
+    energies_sorted: numpy array
+    blochvectors_sorted: numpy array
+    """
+    energies_sorted = np.zeros(energy_grid.shape, dtype='float')
+    blochvectors_sorted = np.zeros(blochvector_grid.shape, dtype='float')
+    if regime == 'driven':
+        for i in range(energy_grid.shape[0]):
+            for j in range(energy_grid.shape[1]):
+                if i == 0 and j == 0:
+                    ind = np.argsort(energy_grid[i,j])
+                    energies_sorted[i,j] = energy_grid[i,j,ind]
+                    blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+                elif j == 0:
+                    ind = np.argsort(energy_grid[i,j])
+                    differences = np.zeros((3,), dtype='float')
+                    for shift in range(3):
+                        ind_roll = np.roll(ind,shift)
+                        diff =((energy_grid[i,j,ind_roll]
+                                 - energies_sorted[i-1,j]) % (2*np.pi))
+                        diff = (diff + 2*np.pi*np.floor((-np.pi-diff) 
+                                                        / (2*np.pi) + 1))
+                        diff = np.abs(diff)
+                        diff = np.sum(diff)
+                        differences[shift] = diff
+                    minimum = np.argmin(differences)
+                    ind = np.roll(ind, minimum)
+                    energies_sorted[i,j] = energy_grid[i,j,ind]
+                    blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+                else:
+                    ind = np.argsort(energy_grid[i,j])
+                    differences = np.zeros((3,), dtype='float')
+                    for shift in range(3):
+                        ind_roll = np.roll(ind,shift)
+                        diff =((energy_grid[i,j,ind_roll]
+                                 - energies_sorted[i,j-1]) % (2*np.pi))
+                        diff = (diff + 2*np.pi*np.floor((-np.pi-diff) 
+                                                        / (2*np.pi) + 1))
+                        diff = np.abs(diff)
+                        diff = np.sum(diff)
+                        differences[shift] = diff
+                    minimum = np.argmin(differences)
+                    ind = np.roll(ind, minimum)
+                    energies_sorted[i,j] = energy_grid[i,j,ind]
+                    blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+    elif regime == 'static':
+        for i in range(energy_grid.shape[0]):
+            for j in range(energy_grid.shape[1]):
+                ind = np.argsort(energy_grid[i,j])
+                energies_sorted[i,j] = energy_grid[i,j,ind]
+                blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+    
+    return energies_sorted, blochvectors_sorted
+
 def compute_bandstructure2D(hamiltonian, 
                             a_1, 
                             a_2, 
@@ -82,43 +199,9 @@ def compute_bandstructure2D(hamiltonian,
             energy_grid[i,j] = energies
             blochvector_grid[i,j] = blochvectors
     
-    # Sorting the energies and blochvectors
-    energies_sorted = np.zeros(energy_grid.shape, dtype='float')
-    blochvectors_sorted = np.zeros(blochvector_grid.shape, dtype='complex')
-    if regime == 'driven':
-        for i in range(energy_grid.shape[0]):
-            for j in range(energy_grid.shape[1]):
-                if i == 0 and j == 0:
-                    current_energies = energy_grid[i,j]
-                    ind = np.argsort(current_energies)
-                    energies_sorted[i,j] = energy_grid[i,j, ind]
-                    blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
-                    previous_energies = current_energies[ind]
-                else:
-                    current_energies = energy_grid[i,j]
-                    ind = np.argsort(current_energies)
-                    differences = np.zeros((3,), dtype='float')
-                    for shift in range(3):
-                        ind_roll = np.roll(ind,shift)
-                        diff = ((current_energies[ind_roll] - previous_energies) 
-                                % (2*np.pi))
-                        diff = (diff + 2*np.pi*np.floor((-np.pi-diff) 
-                                                        / (2*np.pi) + 1))
-                        diff = np.abs(diff)
-                        diff = np.sum(diff)
-                        differences[shift] = diff
-                    minimum = np.argmin(differences)
-                    ind = np.roll(ind, minimum)
-                    energies_sorted[i,j] = energy_grid[i,j, ind]
-                    blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
-                    previous_energies = energies_sorted[i,j]
-    elif regime == 'static':
-        for i in range(energy_grid.shape[0]):
-            for j in range(energy_grid.shape[1]):
-                current_energies = energy_grid[i,j]
-                ind = np.argsort(current_energies)
-                energies_sorted[i,j] = current_energies[ind]
-                blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+    energies_sorted, blochvectors_sorted = sort_energy_grid(energy_grid, 
+                                                            blochvector_grid, 
+                                                            regime)
 
     return energies_sorted, blochvectors_sorted
 
@@ -363,8 +446,6 @@ def locate_nodes(energy_grid,
         plt.show()
     plt.savefig(save)
     plt.close()
-
-    
 
 
 

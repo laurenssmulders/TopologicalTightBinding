@@ -134,4 +134,5 @@ def compute_eigenstates(hamiltonian,
             phi = 0.5*np.imag(np.log(np.inner(blochvectors[:,i], 
                                           blochvectors[:,i])))
             blochvectors[:,i] = np.real(blochvectors[:,i] * np.exp(-1j*phi))
+        blochvectors = np.real(blochvectors)
     return energies, blochvectors
