@@ -48,33 +48,53 @@ def gauge_fix_grid(blochvectors):
     blochvectors_gf: numpy array
         An array with the gauge fixed blochvectors.
     """
-    blochvectors_gf = np.zeros(blochvectors.shape, dtype='float')
+    # Dealing with discontinuities in the blochvectors due to degenerate 
+    # subspaces at nodes
     for i in range(blochvectors.shape[0]):
         for j in range(blochvectors.shape[1]):
-            if i == 0 and j == 0:
-                blochvectors_gf[i,j] = blochvectors[i,j]
-            elif j == 0:
-                for band in range(blochvectors.shape[3]):
-                    if np.vdot(blochvectors_gf[i-1,j,:,band], 
+            if j != 0:
+                if np.sum(np.abs(np.conjugate(np.transpose(blochvectors[i,j-1])) 
+                    @ blochvectors[i,j] - np.identity(3))) > 0.5:
+                    inner_products = np.diag(np.conjugate(
+                        np.transpose(blochvectors[i,j-1])) 
+                        @ blochvectors[i,j] - np.identity(3))
+                    bool_array = inner_products < 0.9
+                    degenerate_bands = np.argwhere(bool_array)
+                    if len(degenerate_bands) != 2:
+                        print('Not two degenerate bands!')
+                    if np.vdot(blochvectors[i,j-1,:,degenerate_bands[0]], 
+                               blochvectors[i,j,:,degenerate_bands[0]]) < 1e-3:
+                        vector0 = blochvectors[i,j,:,degenerate_bands[1]]
+                        vector1 = blochvectors[i,j,:,degenerate_bands[0]]
+                        
+
+
+    for i in range(blochvectors.shape[0]):
+        for j in range(blochvectors.shape[1]):
+            for band in range(blochvectors.shape[3]):
+                if j != 0:
+                    if np.vdot(blochvectors[i,j-1,:,band],
                                blochvectors[i,j,:,band]) < 0:
-                        blochvectors_gf[i,j,:,band] = -blochvectors[i,j,:,band]
+                        blochvectors[i,j,:,band] = - blochvectors[i,j,:,band]
                     else:
-                        blochvectors_gf[i,j,:,band] = blochvectors[i,j,:,band]
-            else:
-                for band in range(blochvectors.shape[3]):
-                    if np.vdot(blochvectors_gf[i,j-1,:,band], 
+                        blochvectors[i,j,:,band] = blochvectors[i,j,:,band]
+                elif i != 0:
+                    if np.vdot(blochvectors[i-1,j,:,band],
                                blochvectors[i,j,:,band]) < 0:
-                        blochvectors_gf[i,j,:,band] = -blochvectors[i,j,:,band]
+                        blochvectors[i,j,:,band] = - blochvectors[i,j,:,band]
                     else:
-                        blochvectors_gf[i,j,:,band] = blochvectors[i,j,:,band]
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    x = np.linspace(0,1,blochvectors.shape[0])
-    y = np.linspace(0,1,blochvectors.shape[1])
-    x,y = np.meshgrid(x,y)
-    surf1 = ax.plot_surface(x,y,blochvectors[:,:,0,1], cmap=cm.YlGnBu,
-                                linewidth=0)
-    plt.show()
-    return blochvectors_gf
+                        blochvectors[i,j,:,band] = blochvectors[i,j,:,band]
+
+
+
+    #fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    #x = np.linspace(0,1,blochvectors.shape[0])
+    #y = np.linspace(0,1,blochvectors.shape[1])
+    #x,y = np.meshgrid(x,y)
+    #surf1 = ax.plot_surface(x,y,blochvectors[:,:,0,1], cmap=cm.YlGnBu,
+    #                            linewidth=0)
+    #plt.show()
+    return blochvectors
 
 def compute_zak_phase(hamiltonian, 
                       a_1, 
@@ -354,12 +374,12 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
     xder = np.zeros((num_points,num_points,3,3), dtype='float')
     for i in range(xder.shape[0]):
         for j in range(xder.shape[1]):
-            xder[i,j] = blochvector_grid[i+1,j] - blochvector_grid[i,j]
+            xder[i,j] = (blochvector_grid[i+1,j] - blochvector_grid[i,j]) / dkx
     
     yder = np.zeros((num_points,num_points,3,3), dtype='float')
     for i in range(yder.shape[0]):
         for j in range(yder.shape[1]):
-            yder[i,j] = blochvector_grid[i,j+1] - blochvector_grid[i,j]
+            yder[i,j] = (blochvector_grid[i,j+1] - blochvector_grid[i,j]) / dky
     
     # calculating Euler curvature at each point and adding up
     Eu = np.zeros((num_points,num_points), dtype='float')
@@ -367,7 +387,61 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
         for j in range(Eu.shape[1]):
             Eu[i,j] = (np.vdot(xder[i,j,:,bands[0]],yder[i,j,:,bands[1]])
                     - np.vdot(yder[i,j,:,bands[0]],xder[i,j,:,bands[1]]))
-    surface_term = np.sum(Eu)
+            
+    mask = np.abs(Eu) > 1000
+    Eu = np.where(mask, np.nan, Eu)
+
+    # Plotting Euler curvature:
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf = ax.plot_surface(kx[:-1,:-1], ky[:-1,:-1], Eu, cmap=cm.YlGnBu, linewidth=0)
+    #ax.set_zlim(-5,5)
+    ax.set_xlim(kxmin,kxmax)
+    ax.set_ylim(kymin,kymax)
+    ax.set_xlabel('$k_x$')
+    ax.set_ylabel('$k_y$')
+    ax.grid(False)
+    ax.set_box_aspect([1, 1, 2])
+    plt.show()
+    plt.close()
+
+    
+    
+    # Gauge fixing is not perfect so there might be divergent terms
+    # trying to get rid of them:
+    for i in range(Eu.shape[0]):
+        for j in range(Eu.shape[1]):
+            if Eu[i,j] > 5:
+                if j != 0:
+                    Eu[i,j] = Eu[i,j-1]
+                elif i != 0:
+                    Eu[i,j] = Eu[i-1,j]
+                else:
+                    shift = 0
+                    while Eu[i,j] > 5:
+                        shift += 1
+                        Eu[i,j] = Eu[i + shift,j]
+
+    # Plotting Euler curvature:
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf = ax.plot_surface(kx[:-1,:-1], ky[:-1,:-1], Eu, cmap=cm.YlGnBu, linewidth=0)
+    #ax.set_zlim(-5,5)
+    ax.set_xlim(kxmin,kxmax)
+    ax.set_ylim(kymin,kymax)
+    ax.set_xlabel('$k_x$')
+    ax.set_ylabel('$k_y$')
+    ax.grid(False)
+    ax.set_box_aspect([1, 1, 2])
+    plt.show()
+    plt.close()
+
+    # Doing y integrals
+    integ_x = np.zeros(Eu.shape[0])
+    for i in range(len(integ_x)):
+        integ_x[i] = np.sum((Eu[i,1:] + Eu[i,:num_points-1]) / 2)*dky
+    
+    # Doing the x integral
+    surface_term = 1 / (2*np.pi) * np.sum((integ_x[1:] 
+                           + integ_x[:num_points-1]) / 2)*dkx
 
     # calculating the boundary term, dividing the boundary into 4 legs;
     # right, up, left, down
@@ -376,18 +450,21 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
     left = np.zeros(num_points, dtype='float')
     down = np.zeros(num_points, dtype='float')
 
-    for i in range(num_points - 1):
+    for i in range(num_points):
         right[i] = np.vdot(blochvector_grid[i,0,:,0],xder[i,0,:,1])
         up[i] = np.vdot(blochvector_grid[-2,i,:,0],yder[-1,i,:,1])
         left[i] = - np.vdot(blochvector_grid[-2-i,-2,:,0],xder[-1-i,-1,:,1])
         down[i] = - np.vdot(blochvector_grid[0,-2-i,:,0],yder[0,-1-i,:,1])
     
-    boundary_term = np.sum(right) + np.sum(up) + np.sum(left) + np.sum(down)
+    right = np.sum(right[1:] + right[:num_points-1]) / 2 * dkx
+    up = np.sum(up[1:] + up[:num_points-1]) / 2 * dky
+    left = np.sum(left[1:] + left[:num_points-1]) / 2 * dkx
+    down = np.sum(down[1:] + down[:num_points-1]) / 2 * dky
+    boundary_term = 1 / (2*np.pi) * (right + up + left + down)
 
-    print(surface_term / (2*np.pi))
-    print(boundary_term / (2*np.pi))
-
-    chi = 1 / (2*np.pi) * (surface_term - boundary_term)
+    print(surface_term)
+    print(boundary_term)
+    chi = (surface_term - boundary_term)
 
     return chi
     

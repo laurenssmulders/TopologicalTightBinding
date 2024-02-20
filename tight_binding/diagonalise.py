@@ -110,12 +110,24 @@ def compute_eigenstates(hamiltonian,
     if regime == 'static':
         H = hamiltonian(k)
         energies, blochvectors = np.linalg.eig(H)
+        # at degeneracies blochvectors may not be orthogonal so check and 
+        # otherwise use schur decomposition
+        if np.sum(np.identity(3) 
+            - np.conjugate(np.transpose(blochvectors)) @ blochvectors) > 1e-5:
+            T, blochvectors = la.schur(H)
+            energies = np.diag(T)
+            print('schur')
         dim = H.shape[0]
     
     elif regime == 'driven':
         U = compute_time_evolution(hamiltonian, k, 0, 2*np.pi/omega, num_steps, 
                                    method)
         eigenvalues, eigenvectors = np.linalg.eig(U)
+        if np.sum(np.identity(3) 
+            - np.conjugate(np.transpose(eigenvectors)) @ eigenvectors) > 1e-5:
+            T, eigenvectors = la.schur(H)
+            eigenvalues = np.diag(T)
+            print('schur')
         energies = np.real(np.log(eigenvalues) / (-1j))
         errors = np.real(np.log(eigenvalues)) #checking for real eigenenergies
         if np.sum(errors) > 1e-5:
