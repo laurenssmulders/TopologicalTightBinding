@@ -57,7 +57,7 @@ def compute_time_evolution(hamiltonian, k, t_0, t_1, num_steps, method='trotter'
         print('Enter valid solution method.')
     
     #Checking for unitarity
-    norm = np.dot(np.conjugate(np.transpose(U, (1,0))), U)
+    norm = np.conjugate(np.transpose(U, (1,0))) @ U
     norm_error = np.trace(norm) - U.shape[0]
     if abs(norm_error) > 1e-5:
         print('High normalisation error!: {norm_error}'.format(
@@ -109,23 +109,25 @@ def compute_eigenstates(hamiltonian,
     """
     if regime == 'static':
         H = hamiltonian(k)
+        dim = H.shape[0]
         energies, blochvectors = np.linalg.eig(H)
         # at degeneracies blochvectors may not be orthogonal so check and 
         # otherwise use schur decomposition
-        if np.sum(np.identity(3) 
+        if np.sum(np.identity(dim) 
             - np.conjugate(np.transpose(blochvectors)) @ blochvectors) > 1e-5:
             T, blochvectors = la.schur(H)
             energies = np.diag(T)
             print('schur')
-        dim = H.shape[0]
+        
     
     elif regime == 'driven':
         U = compute_time_evolution(hamiltonian, k, 0, 2*np.pi/omega, num_steps, 
                                    method)
+        dim = U.shape[0]
         eigenvalues, eigenvectors = np.linalg.eig(U)
-        if np.sum(np.identity(3) 
+        if np.sum(np.identity(dim) 
             - np.conjugate(np.transpose(eigenvectors)) @ eigenvectors) > 1e-5:
-            T, eigenvectors = la.schur(H)
+            T, eigenvectors = la.schur(U)
             eigenvalues = np.diag(T)
             print('schur')
         energies = np.real(np.log(eigenvalues) / (-1j))
@@ -136,8 +138,7 @@ def compute_eigenstates(hamiltonian,
         energies = (energies + 2*np.pi*np.floor((lowest_quasi_energy-energies) 
                                                 / (2*np.pi) + 1))
         blochvectors = eigenvectors
-        dim = U.shape[0]
-
+        
     else:
         print('Enter a valid regime')
     #Optionally enforcing reality

@@ -2,6 +2,7 @@
 
 # 01 IMPORTS
 import numpy as np
+from copy import copy
 import scipy.linalg as la
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -54,20 +55,70 @@ def gauge_fix_grid(blochvectors):
         for j in range(blochvectors.shape[1]):
             if j != 0:
                 if np.sum(np.abs(np.conjugate(np.transpose(blochvectors[i,j-1])) 
-                    @ blochvectors[i,j] - np.identity(3))) > 0.5:
+                    @ blochvectors[i,j] - np.identity(3))) > 7.3:
+                    print('node')
                     inner_products = np.diag(np.conjugate(
                         np.transpose(blochvectors[i,j-1])) 
-                        @ blochvectors[i,j] - np.identity(3))
-                    bool_array = inner_products < 0.9
-                    degenerate_bands = np.argwhere(bool_array)
-                    if len(degenerate_bands) != 2:
-                        print('Not two degenerate bands!')
+                        @ blochvectors[i,j])
+                    dev = np.abs(inner_products - 1)
+                    ind = np.argsort(dev)
+                    degenerate_bands = ind[-2:]
                     if np.vdot(blochvectors[i,j-1,:,degenerate_bands[0]], 
                                blochvectors[i,j,:,degenerate_bands[0]]) < 1e-3:
-                        vector0 = blochvectors[i,j,:,degenerate_bands[1]]
-                        vector1 = blochvectors[i,j,:,degenerate_bands[0]]
-                        
-
+                        vector0 = copy(blochvectors[i,j,:,degenerate_bands[1]])
+                        vector1 = copy(blochvectors[i,j,:,degenerate_bands[0]])
+                        blochvectors[i,j,:,degenerate_bands[0]] = vector0
+                        blochvectors[i,j,:,degenerate_bands[1]] = vector1
+                    else:
+                        inner_product_ratio = (np.vdot(
+                            blochvectors[i,j,:,degenerate_bands[1]],
+                            blochvectors[i,j-1,:,degenerate_bands[0]]) 
+                        / np.vdot(blochvectors[i,j,:,degenerate_bands[0]],
+                                blochvectors[i,j-1,degenerate_bands[0]]
+                            ))
+                        vector1 = (-inner_product_ratio 
+                                   * blochvectors[i,j,:,degenerate_bands[0]]
+                                   + blochvectors[i,j,:,degenerate_bands[1]])
+                        vector0 = (blochvectors[i,j,:,degenerate_bands[0]]
+                                   + inner_product_ratio
+                                   * blochvectors[i,j,:,degenerate_bands[1]])
+                        vector1 = vector1 / np.linalg.norm(vector1)
+                        vector0 = vector0 / np.linalg.norm(vector0)
+                        blochvectors[i,j,:,degenerate_bands[0]] = vector0
+                        blochvectors[i,j,:,degenerate_bands[1]] = vector1
+            elif i != 0:
+                if np.sum(np.abs(np.conjugate(np.transpose(blochvectors[i-1,j])) 
+                    @ blochvectors[i,j] - np.identity(3))) > 7.3:
+                    print('node')
+                    inner_products = np.diag(np.conjugate(
+                        np.transpose(blochvectors[i-1,j])) 
+                        @ blochvectors[i,j])
+                    dev = np.abs(inner_products - 1)
+                    ind = np.argsort(dev)
+                    degenerate_bands = ind[-2:]
+                    if np.vdot(blochvectors[i-1,j,:,degenerate_bands[0]], 
+                               blochvectors[i,j,:,degenerate_bands[0]]) < 1e-3:
+                        vector0 = copy(blochvectors[i,j,:,degenerate_bands[1]])
+                        vector1 = copy(blochvectors[i,j,:,degenerate_bands[0]])
+                        blochvectors[i,j,:,degenerate_bands[0]] = vector0
+                        blochvectors[i,j,:,degenerate_bands[1]] = vector1
+                    else:
+                        inner_product_ratio = (np.vdot(
+                            blochvectors[i,j,:,degenerate_bands[1]],
+                            blochvectors[i-1,j,:,degenerate_bands[0]]) 
+                        / np.vdot(blochvectors[i,j,:,degenerate_bands[0]],
+                                blochvectors[i-1,j,degenerate_bands[0]]
+                            ))
+                        vector1 = (-inner_product_ratio 
+                                   * blochvectors[i,j,:,degenerate_bands[0]]
+                                   + blochvectors[i,j,:,degenerate_bands[1]])
+                        vector0 = (blochvectors[i,j,:,degenerate_bands[0]]
+                                   + inner_product_ratio
+                                   * blochvectors[i,j,:,degenerate_bands[1]])
+                        vector1 = vector1 / np.linalg.norm(vector1)
+                        vector0 = vector0 / np.linalg.norm(vector0)
+                        blochvectors[i,j,:,degenerate_bands[0]] = vector0
+                        blochvectors[i,j,:,degenerate_bands[1]] = vector1
 
     for i in range(blochvectors.shape[0]):
         for j in range(blochvectors.shape[1]):

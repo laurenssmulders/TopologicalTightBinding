@@ -53,6 +53,8 @@ def sort_energy_path(energies, blochvectors,
             ind = np.argsort(energies[i])
             energies[i] = energies[i,ind]
             blochvectors[i] = blochvectors[i][:,ind]
+    
+    return energies, blochvectors
 
 def sort_energy_grid(energy_grid,
                      blochvector_grid,

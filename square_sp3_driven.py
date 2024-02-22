@@ -5,20 +5,20 @@ from tight_binding.hamiltonians import square_hamiltonian_driven
 from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstructure2D, locate_nodes
 from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
-plotting = False
+plotting = True
 slicing = False
-zak = True
+zak = False
 locate_ds = False
 
 
 
 # PARAMETERS
-delta_A = -0.5
-delta_C = -7.6
+delta_A = -6
+delta_C = 1
 omega = 10
 A_x = 1
 
-delta_B = -delta_A - delta_C
+delta_B = - delta_A - delta_C
 
 ## OTHER
 a_1 = np.array([1,0])
@@ -26,7 +26,7 @@ a_2 = np.array([0,1])
 num_points = 100
 num_steps = 100
 num_lines = 100
-lowest_quasi_energy = -np.pi / 4
+lowest_quasi_energy = np.pi / 4
 offsets = np.zeros((3,2))
 
 main_directory = 'figures/square/SP3/driven/bandstructures'
