@@ -500,3 +500,238 @@ def square_hamiltonian_driven(delta_a=0,
        return hamiltonian
     
     return H
+
+def square_hamiltonian_driven_finite_y(
+                              L = 10,
+                              delta_a=0, 
+                              delta_b=0, 
+                              delta_c=0, 
+                              J_ab_0=0, 
+                              J_ac_0=0, 
+                              J_bc_0=0, 
+                              J_aa_1x=0, 
+                              J_bb_1x=0, 
+                              J_cc_1x=0, 
+                              J_ab_1x=0, 
+                              J_ac_1x=0, 
+                              J_bc_1x=0,
+                              J_aa_1y=0, 
+                              J_bb_1y=0, 
+                              J_cc_1y=0, 
+                              J_ab_1y=0, 
+                              J_ac_1y=0, 
+                              J_bc_1y=0,
+                              J_aa_2p=0, 
+                              J_bb_2p=0, 
+                              J_cc_2p=0, 
+                              J_ab_2p=0, 
+                              J_ac_2p=0, 
+                              J_bc_2p=0,
+                              J_aa_2m=0, 
+                              J_bb_2m=0, 
+                              J_cc_2m=0, 
+                              J_ab_2m=0, 
+                              J_ac_2m=0, 
+                              J_bc_2m=0,  
+                              A_x=0, 
+                              A_y=0, 
+                              omega=0, 
+                              phi=0,
+                              a=1):
+    """Defines a bloch hamiltonian for the out-of-equillibrium square lattice,
+    cut along the x direction.
+    
+    Parameters
+    ----------
+    L: int
+        The number of layres in the y direction to use
+    delta_aa: float
+        The on-site potential for the A orbital
+    delta_bb: float
+        The on-site potential for the B orbital
+    delta_cc: float
+        The on-site potential for the C orbital
+    delta_ab: float
+        The matrix element for the A and B orbitals at the same site
+    delta_ac: float
+        The matrix element for the A and C orbitals at the same site
+    delta_bc: float
+        The matrix element for the B and C orbitals at the same site
+    J_aa_1x: float
+        The tunneling parameter between nn A orbitals in the horizontal 
+        direction
+    J_bb_1x: float
+        The tunneling parameter between nn B orbitals in the horizontal 
+        direction
+    J_cc_1x: float
+        The tunneling parameter between nn C orbitals in the horizontal 
+        direction
+    J_ab_1x: float
+        The tunneling parameter between nn A and B orbitals in the horizontal 
+        direction
+    J_ac_1x: float
+        The tunneling parameter between nn A and C orbitals in the horizontal 
+        direction
+    J_bc_1x: float
+        The tunneling parameter between nn B and C orbitals in the horizontal 
+        direction
+    J_aa_1y: float
+        The tunneling parameter between nn A orbitals in the vertical direction
+    J_bb_1y: float
+        The tunneling parameter between nn B orbitals in the vertical direction
+    J_cc_1y: float
+        The tunneling parameter between nn C orbitals in the vertical direction
+    J_ab_1y: float
+        The tunneling parameter between nn A and B orbitals in the vertical 
+        direction
+    J_ac_1y: float
+        The tunneling parameter between nn A and C orbitals in the vertical 
+        direction
+    J_bc_1y: float
+        The tunneling parameter between nn B and C orbitals in the vertical 
+        direction
+    J_aa_2p: float
+        The tunneling parameter between nn A orbitals in the diagonal a1+a2 
+        direction
+    J_bb_2p: float
+        The tunneling parameter between nn B orbitals in the diagonal a1+a2 
+        direction
+    J_cc_2p: float
+        The tunneling parameter between nn C orbitals in the diagonal a1+a2 
+        direction
+    J_ab_2p: float
+        The tunneling parameter between nn A and B orbitals in the diagonal 
+        a1+a2 direction
+    J_ac_2p: float
+        The tunneling parameter between nn A and C orbitals in the diagonal 
+        a1+a2 direction
+    J_bc_2p: float
+        The tunneling parameter between nn B and C orbitals in the diagonal 
+        a1+a2 direction
+    J_aa_2m: float
+        The     tunneling parameter between nn A orbitals in the diagonal a1-a2 
+        direction
+    J_bb_2m: float
+        The tunneling parameter between nn B orbitals in the diagonal a1-a2 
+        direction
+    J_cc_2m: float
+        The tunneling parameter between nn C orbitals in the diagonal a1-a2 
+        direction
+    J_ab_2m: float
+        The tunneling parameter between nn A and B orbitals in the diagonal 
+        a1-a2 direction
+    J_ac_2m: float
+        The tunneling parameter between nn A and C orbitals in the diagonal 
+        a1-a2 direction
+    J_bc_2m: float
+        The tunneling parameter between nn B and C orbitals in the diagonal 
+        a1-a2 direction
+    A_x: float
+        The amplitude of the x component of the driving vector potential
+    A_y: float
+        The amplitude of the y component of the driving vector potential
+    omega: float
+        The angular frequency of the driving vector potential
+    phi:
+        The relative phase of the phi component of the vector potential
+    a: float
+        The lattice spacing
+
+    Returns
+    -------
+    H: function
+        The square bloch hamiltonian as a function of quasimomentum k and 
+        time t"""
+    a_1 = a*np.array([1,0])
+    a_2 = a*np.array([0,1])
+
+    J_ba_0 = np.conjugate(J_ab_0)
+    J_ca_0 = np.conjugate(J_ac_0)
+    J_cb_0 = np.conjugate(J_bc_0)
+    J_ba_1x = np.conjugate(J_ab_1x)
+    J_ca_1x = np.conjugate(J_ac_1x)
+    J_cb_1x = np.conjugate(J_bc_1x)
+    J_ba_1y = np.conjugate(J_ab_1y)
+    J_ca_1y = np.conjugate(J_ac_1y)
+    J_cb_1y = np.conjugate(J_bc_1y)
+    J_ba_2p = np.conjugate(J_ab_2p)
+    J_ca_2p = np.conjugate(J_ac_2p)
+    J_cb_2p = np.conjugate(J_bc_2p)
+    J_ba_2m = np.conjugate(J_ab_2m)
+    J_ca_2m = np.conjugate(J_ac_2m)
+    J_cb_2m = np.conjugate(J_bc_2m)
+
+    
+    def A(time):
+        drive = np.array([A_x*np.cos(omega*time), 
+                                        -A_y*np.cos(omega*time + phi)])
+        return drive
+    
+    def H(k,t):
+        hamiltonian = np.zeros((3*L,3*L))
+
+        on_site = np.array([
+            [delta_a, -2*J_ab_0, -2*J_ac_0],
+            [-2*J_ba_0, delta_b, -2*J_bc_0],
+            [-2*J_ca_0, -2*J_cb_0, delta_c]
+        ])
+
+        horizontal = np.array([
+            [J_aa_1x, J_ab_1x, J_ac_1x],
+            [J_ba_1x, J_bb_1x, J_bc_1x],
+            [J_ca_1x, J_cb_1x, J_cc_1x]
+        ]) * -2*np.cos((k+A(t)[0])*a)
+
+        vertical_pos = np.array([
+            [J_aa_1y, J_ab_1y, J_ac_1y],
+            [J_ba_1y, J_bb_1y, J_bc_1y],
+            [J_ca_1y, J_cb_1y, J_cc_1y]
+        ])*-np.exp(1j*A(t)[1]*a)
+
+        vertical_neg = np.array([
+            [J_aa_1y, J_ab_1y, J_ac_1y],
+            [J_ba_1y, J_bb_1y, J_bc_1y],
+            [J_ca_1y, J_cb_1y, J_cc_1y]
+        ])*-np.exp(-1j*A(t)[1]*a)
+
+        diagonal_p_pos = np.array([
+            [J_aa_2p, J_ab_2p, J_ac_2p],
+            [J_ba_2p, J_bb_2p, J_bc_2p],
+            [J_ca_2p, J_cb_2p, J_cc_2p]
+        ])*-np.exp(1j*(k+A(t)[0]+A(t)[1])*a)
+
+        diagonal_p_neg = np.array([
+            [J_aa_2p, J_ab_2p, J_ac_2p],
+            [J_ba_2p, J_bb_2p, J_bc_2p],
+            [J_ca_2p, J_cb_2p, J_cc_2p]
+        ])*-np.exp(-1j*(k+A(t)[0]+A(t)[1])*a)
+
+        diagonal_m_pos = np.array([
+            [J_aa_2m, J_ab_2m, J_ac_2m],
+            [J_ba_2m, J_bb_2m, J_bc_2m],
+            [J_ca_2m, J_cb_2m, J_cc_2m]
+        ])*-np.exp(1j*(-k-A(t)[0]+A(t)[1])*a)
+
+        diagonal_m_neg = np.array([
+            [J_aa_2m, J_ab_2m, J_ac_2m],
+            [J_ba_2m, J_bb_2m, J_bc_2m],
+            [J_ca_2m, J_cb_2m, J_cc_2m]
+        ])*-np.exp(1j*(-k-A(t)[0]+A(t)[1])*a)
+
+
+        for i in range(L):
+            for j in range(L):
+                if i == j:
+                    hamiltonian[3*i:3*i+3,3*j:3*j+3] = on_site + horizontal
+                elif i+1 == j:
+                    hamiltonian[3*i:3*i+3,3*j:3*j+3] = (vertical_pos 
+                                                        + diagonal_p_pos 
+                                                        + diagonal_m_pos)
+                elif i-1 == j:
+                    hamiltonian[3*i:3*i+3,3*j:3*j+3] = (vertical_neg 
+                                                        + diagonal_p_neg
+                                                        + diagonal_m_neg)
+                                            
+        return hamiltonian
+    
+    return H
