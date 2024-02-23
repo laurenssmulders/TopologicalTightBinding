@@ -30,8 +30,8 @@ perpendicular_directions = np.array([
 ])
 
 # PARAMETERS
-delta_A_scan = np.array([0])
-delta_C_scan = np.array([0])
+delta_A_scan = np.array([-7])
+delta_C_scan = np.array([1])
 omega = 15
 A_x = 1
 
