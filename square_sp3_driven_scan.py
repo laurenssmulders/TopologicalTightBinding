@@ -5,9 +5,9 @@ from tight_binding.hamiltonians import square_hamiltonian_driven
 from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstructure2D, locate_nodes
 from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
-plotting = True
-slicing = False
-nodes = True
+plotting = False
+slicing = True
+nodes = False
 locate_ds = False
 
 
