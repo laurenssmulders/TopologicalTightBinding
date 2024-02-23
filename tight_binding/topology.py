@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from .diagonalise import compute_eigenstates
 from .utilitities import compute_reciprocal_lattice_vectors_2D
-from .bandstructure import sort_energy_grid
+from .bandstructure import sort_energy_grid, plot_bandstructure2D
 
 def gauge_fix_path(blochvectors):
     """Fixes the gauge of real blochvectors along a 1D path.
@@ -23,18 +23,15 @@ def gauge_fix_path(blochvectors):
     blochvectors_gf: numpy array
         An array with the gauge fixed blochvectors.
     """
-    blochvectors_gf = np.zeros(blochvectors.shape, dtype='float')
     for i in range(blochvectors.shape[0]):
-        if i == 0:
-            blochvectors_gf[i] = blochvectors[i]
-        else:
+        if i != 0:
             for band in range(blochvectors.shape[2]):
-                if np.vdot(blochvectors_gf[i-1,:,band], 
+                if np.vdot(blochvectors[i-1,:,band], 
                            blochvectors[i,:,band]) < 0:
-                    blochvectors_gf[i,:,band] = -blochvectors[i,:,band]
+                    blochvectors[i,:,band] = -blochvectors[i,:,band]
                 else:
-                    blochvectors_gf[i,:,band] = blochvectors[i,:,band]
-    return blochvectors_gf
+                    blochvectors[i,:,band] = blochvectors[i,:,band]
+    return blochvectors
 
 def gauge_fix_grid(blochvectors):
     """Fixes the gauge of real blochvectors on a 2D grid.
@@ -46,106 +43,74 @@ def gauge_fix_grid(blochvectors):
     
     Returns
     -------
-    blochvectors_gf: numpy array
+    blochvectors: numpy array
         An array with the gauge fixed blochvectors.
     """
-    # Dealing with discontinuities in the blochvectors due to degenerate 
-    # subspaces at nodes
-    for i in range(blochvectors.shape[0]):
-        for j in range(blochvectors.shape[1]):
-            if j != 0:
-                if np.sum(np.abs(np.conjugate(np.transpose(blochvectors[i,j-1])) 
-                    @ blochvectors[i,j] - np.identity(3))) > 7.3:
-                    print('node')
-                    inner_products = np.diag(np.conjugate(
-                        np.transpose(blochvectors[i,j-1])) 
-                        @ blochvectors[i,j])
-                    dev = np.abs(inner_products - 1)
-                    ind = np.argsort(dev)
-                    degenerate_bands = ind[-2:]
-                    if np.vdot(blochvectors[i,j-1,:,degenerate_bands[0]], 
-                               blochvectors[i,j,:,degenerate_bands[0]]) < 1e-3:
-                        vector0 = copy(blochvectors[i,j,:,degenerate_bands[1]])
-                        vector1 = copy(blochvectors[i,j,:,degenerate_bands[0]])
-                        blochvectors[i,j,:,degenerate_bands[0]] = vector0
-                        blochvectors[i,j,:,degenerate_bands[1]] = vector1
-                    else:
-                        inner_product_ratio = (np.vdot(
-                            blochvectors[i,j,:,degenerate_bands[1]],
-                            blochvectors[i,j-1,:,degenerate_bands[0]]) 
-                        / np.vdot(blochvectors[i,j,:,degenerate_bands[0]],
-                                blochvectors[i,j-1,degenerate_bands[0]]
-                            ))
-                        vector1 = (-inner_product_ratio 
-                                   * blochvectors[i,j,:,degenerate_bands[0]]
-                                   + blochvectors[i,j,:,degenerate_bands[1]])
-                        vector0 = (blochvectors[i,j,:,degenerate_bands[0]]
-                                   + inner_product_ratio
-                                   * blochvectors[i,j,:,degenerate_bands[1]])
-                        vector1 = vector1 / np.linalg.norm(vector1)
-                        vector0 = vector0 / np.linalg.norm(vector0)
-                        blochvectors[i,j,:,degenerate_bands[0]] = vector0
-                        blochvectors[i,j,:,degenerate_bands[1]] = vector1
-            elif i != 0:
-                if np.sum(np.abs(np.conjugate(np.transpose(blochvectors[i-1,j])) 
-                    @ blochvectors[i,j] - np.identity(3))) > 7.3:
-                    print('node')
-                    inner_products = np.diag(np.conjugate(
-                        np.transpose(blochvectors[i-1,j])) 
-                        @ blochvectors[i,j])
-                    dev = np.abs(inner_products - 1)
-                    ind = np.argsort(dev)
-                    degenerate_bands = ind[-2:]
-                    if np.vdot(blochvectors[i-1,j,:,degenerate_bands[0]], 
-                               blochvectors[i,j,:,degenerate_bands[0]]) < 1e-3:
-                        vector0 = copy(blochvectors[i,j,:,degenerate_bands[1]])
-                        vector1 = copy(blochvectors[i,j,:,degenerate_bands[0]])
-                        blochvectors[i,j,:,degenerate_bands[0]] = vector0
-                        blochvectors[i,j,:,degenerate_bands[1]] = vector1
-                    else:
-                        inner_product_ratio = (np.vdot(
-                            blochvectors[i,j,:,degenerate_bands[1]],
-                            blochvectors[i-1,j,:,degenerate_bands[0]]) 
-                        / np.vdot(blochvectors[i,j,:,degenerate_bands[0]],
-                                blochvectors[i-1,j,degenerate_bands[0]]
-                            ))
-                        vector1 = (-inner_product_ratio 
-                                   * blochvectors[i,j,:,degenerate_bands[0]]
-                                   + blochvectors[i,j,:,degenerate_bands[1]])
-                        vector0 = (blochvectors[i,j,:,degenerate_bands[0]]
-                                   + inner_product_ratio
-                                   * blochvectors[i,j,:,degenerate_bands[1]])
-                        vector1 = vector1 / np.linalg.norm(vector1)
-                        vector0 = vector0 / np.linalg.norm(vector0)
-                        blochvectors[i,j,:,degenerate_bands[0]] = vector0
-                        blochvectors[i,j,:,degenerate_bands[1]] = vector1
-
-    for i in range(blochvectors.shape[0]):
-        for j in range(blochvectors.shape[1]):
-            for band in range(blochvectors.shape[3]):
+    for band in range(blochvectors.shape[3]):
+        gauge = 0
+        neighbours = 0
+        for i in range(blochvectors.shape[0]):
+            for j in range(blochvectors.shape[1]):
+                if i != 0:
+                    gauge += np.vdot(blochvectors[i-1,j,:,band],
+                                     blochvectors[i,j,:,band]) > 0
+                    neighbours += 1
                 if j != 0:
-                    if np.vdot(blochvectors[i,j-1,:,band],
-                               blochvectors[i,j,:,band]) < 0:
-                        blochvectors[i,j,:,band] = - blochvectors[i,j,:,band]
-                    else:
-                        blochvectors[i,j,:,band] = blochvectors[i,j,:,band]
-                elif i != 0:
-                    if np.vdot(blochvectors[i-1,j,:,band],
-                               blochvectors[i,j,:,band]) < 0:
-                        blochvectors[i,j,:,band] = - blochvectors[i,j,:,band]
-                    else:
-                        blochvectors[i,j,:,band] = blochvectors[i,j,:,band]
+                    gauge += np.vdot(blochvectors[i,j-1,:,band],
+                                     blochvectors[i,j,:,band]) > 0
+                    neighbours += 1
+                if i != blochvectors.shape[0] - 1:
+                    gauge += np.vdot(blochvectors[i+1,j,:,band],
+                                     blochvectors[i,j,:,band]) > 0
+                    neighbours += 1
+                if j != blochvectors.shape[1] - 1:
+                    gauge += np.vdot(blochvectors[i,j+1,:,band],
+                                     blochvectors[i,j,:,band]) > 0
+                    neighbours += 1
 
-
-
-    #fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    #x = np.linspace(0,1,blochvectors.shape[0])
-    #y = np.linspace(0,1,blochvectors.shape[1])
-    #x,y = np.meshgrid(x,y)
-    #surf1 = ax.plot_surface(x,y,blochvectors[:,:,0,1], cmap=cm.YlGnBu,
-    #                            linewidth=0)
-    #plt.show()
-    return blochvectors
+        iterations = 0
+        while gauge / neighbours < 0.99 and iterations < 10000:
+            iterations += 1
+            i = np.random.randint(0,blochvectors.shape[0])
+            j = np.random.randint(0,blochvectors.shape[1])
+            point_gauge = 0
+            if i != 0:
+                point_gauge += np.vdot(blochvectors[i-1,j,:,band],
+                                blochvectors[i,j,:,band])
+            if j != 0:
+                point_gauge += np.vdot(blochvectors[i,j-1,:,band],
+                                blochvectors[i,j,:,band])
+            if i != blochvectors.shape[0] - 1:
+                point_gauge += np.vdot(blochvectors[i+1,j,:,band],
+                                blochvectors[i,j,:,band])
+            if j != blochvectors.shape[1] - 1:
+                point_gauge += np.vdot(blochvectors[i,j+1,:,band],
+                                blochvectors[i,j,:,band])
+            if point_gauge < 0:
+                blochvectors[i,j,:,band] = - blochvectors[i,j,:,band]
+            
+            if iterations % 1000 == 0:
+                gauge = 0
+                neighbours = 0
+                for i in range(blochvectors.shape[0]):
+                    for j in range(blochvectors.shape[1]):
+                        if i != 0:
+                            gauge += np.vdot(blochvectors[i-1,j,:,band],
+                                            blochvectors[i,j,:,band]) > 0
+                            neighbours += 1
+                        if j != 0:
+                            gauge += np.vdot(blochvectors[i,j-1,:,band],
+                                            blochvectors[i,j,:,band]) > 0
+                            neighbours += 1
+                        if i != blochvectors.shape[0] - 1:
+                            gauge += np.vdot(blochvectors[i+1,j,:,band],
+                                            blochvectors[i,j,:,band]) > 0
+                            neighbours += 1
+                        if j != blochvectors.shape[1] - 1:
+                            gauge += np.vdot(blochvectors[i,j+1,:,band],
+                                            blochvectors[i,j,:,band]) > 0
+                            neighbours += 1
+        return blochvectors
 
 def compute_zak_phase(hamiltonian, 
                       a_1, 
@@ -385,6 +350,8 @@ def locate_dirac_strings(hamiltonian,
     plt.close()
 
 def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_points,omega,num_steps,lowest_quasi_energy,method,regime):
+    a_1 = np.array([1,0])
+    a_2 = np.array([0,1])
     kx = np.linspace(kxmin,kxmax,num_points)
     dkx = kx[1] - kx[0]
     kx_extended = np.zeros(kx.shape[0] + 1)
@@ -415,8 +382,11 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
                                                          True, method, regime)
             energy_grid[i,j] = energies
             blochvector_grid[i,j] = blochvectors
+
     energy_grid, blochvector_grid = sort_energy_grid(energy_grid, 
                                                      blochvector_grid, regime)
+    
+    plot_bandstructure2D(energy_grid, a_1, a_2, 'test.png')
     
     # gauge fixing
     blochvector_grid = gauge_fix_grid(blochvector_grid)
@@ -432,58 +402,29 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
         for j in range(yder.shape[1]):
             yder[i,j] = (blochvector_grid[i,j+1] - blochvector_grid[i,j]) / dky
     
-    # calculating Euler curvature at each point and adding up
+    # calculating Euler curvature at each point
     Eu = np.zeros((num_points,num_points), dtype='float')
     for i in range(Eu.shape[0]):
         for j in range(Eu.shape[1]):
             Eu[i,j] = (np.vdot(xder[i,j,:,bands[0]],yder[i,j,:,bands[1]])
                     - np.vdot(yder[i,j,:,bands[0]],xder[i,j,:,bands[1]]))
-            
-    mask = np.abs(Eu) > 1000
-    Eu = np.where(mask, np.nan, Eu)
-
-    # Plotting Euler curvature:
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    surf = ax.plot_surface(kx[:-1,:-1], ky[:-1,:-1], Eu, cmap=cm.YlGnBu, linewidth=0)
-    #ax.set_zlim(-5,5)
-    ax.set_xlim(kxmin,kxmax)
-    ax.set_ylim(kymin,kymax)
-    ax.set_xlabel('$k_x$')
-    ax.set_ylabel('$k_y$')
-    ax.grid(False)
-    ax.set_box_aspect([1, 1, 2])
-    plt.show()
-    plt.close()
-
-    
     
     # Gauge fixing is not perfect so there might be divergent terms
     # trying to get rid of them:
     for i in range(Eu.shape[0]):
         for j in range(Eu.shape[1]):
-            if Eu[i,j] > 5:
+            if np.abs(Eu[i,j]) > 5:
                 if j != 0:
                     Eu[i,j] = Eu[i,j-1]
                 elif i != 0:
                     Eu[i,j] = Eu[i-1,j]
                 else:
                     shift = 0
-                    while Eu[i,j] > 5:
+                    while np.abs(Eu[i,j]) > 5 and shift < 10:
                         shift += 1
                         Eu[i,j] = Eu[i + shift,j]
-
-    # Plotting Euler curvature:
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    surf = ax.plot_surface(kx[:-1,:-1], ky[:-1,:-1], Eu, cmap=cm.YlGnBu, linewidth=0)
-    #ax.set_zlim(-5,5)
-    ax.set_xlim(kxmin,kxmax)
-    ax.set_ylim(kymin,kymax)
-    ax.set_xlabel('$k_x$')
-    ax.set_ylabel('$k_y$')
-    ax.grid(False)
-    ax.set_box_aspect([1, 1, 2])
-    plt.show()
-    plt.close()
+                    if np.abs(Eu[i,j]) > 5:
+                        Eu[i,j] = 0
 
     # Doing y integrals
     integ_x = np.zeros(Eu.shape[0])
@@ -502,10 +443,10 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
     down = np.zeros(num_points, dtype='float')
 
     for i in range(num_points):
-        right[i] = np.vdot(blochvector_grid[i,0,:,0],xder[i,0,:,1])
-        up[i] = np.vdot(blochvector_grid[-2,i,:,0],yder[-1,i,:,1])
-        left[i] = - np.vdot(blochvector_grid[-2-i,-2,:,0],xder[-1-i,-1,:,1])
-        down[i] = - np.vdot(blochvector_grid[0,-2-i,:,0],yder[0,-1-i,:,1])
+        right[i] = np.vdot(blochvector_grid[i,0,:,bands[0]],xder[i,0,:,bands[1]])
+        up[i] = np.vdot(blochvector_grid[-2,i,:,bands[0]],yder[-1,i,:,bands[1]])
+        left[i] = - np.vdot(blochvector_grid[-2-i,-2,:,bands[0]],xder[-1-i,-1,:,bands[1]])
+        down[i] = - np.vdot(blochvector_grid[0,-2-i,:,bands[0]],yder[0,-1-i,:,bands[1]])
     
     right = np.sum(right[1:] + right[:num_points-1]) / 2 * dkx
     up = np.sum(up[1:] + up[:num_points-1]) / 2 * dky
