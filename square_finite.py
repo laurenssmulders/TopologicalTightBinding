@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from tight_binding.hamiltonians import square_hamiltonian_driven_finite_x
+from tight_binding.hamiltonians import square_hamiltonian_driven_finite_y, square_hamiltonian_driven_finite_x
 from tight_binding.bandstructure import sort_energy_path
 from tight_binding.diagonalise import compute_eigenstates
 
@@ -10,7 +10,7 @@ from tight_binding.diagonalise import compute_eigenstates
 L = 30
 delta_A = -7
 delta_C = 1
-omega = 10
+omega = 11
 A_x = 1
 
 delta_B = -delta_A - delta_C

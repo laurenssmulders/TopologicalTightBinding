@@ -7,7 +7,7 @@ from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
 plotting = True
 slicing = False
-nodes = False
+nodes = True
 locate_ds = False
 
 
@@ -32,7 +32,7 @@ perpendicular_directions = np.array([
 # PARAMETERS
 delta_A_scan = np.array([-7])
 delta_C_scan = np.array([1])
-omega = 25
+omega = 7
 A_x = 1
 
 ## OTHER
