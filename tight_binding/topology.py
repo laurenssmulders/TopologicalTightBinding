@@ -46,71 +46,25 @@ def gauge_fix_grid(blochvectors):
     blochvectors: numpy array
         An array with the gauge fixed blochvectors.
     """
+    blochvectors_gf = np.zeros(blochvectors.shape)
     for band in range(blochvectors.shape[3]):
-        gauge = 0
-        neighbours = 0
         for i in range(blochvectors.shape[0]):
             for j in range(blochvectors.shape[1]):
                 if i != 0:
-                    gauge += np.vdot(blochvectors[i-1,j,:,band],
-                                     blochvectors[i,j,:,band]) > 0
-                    neighbours += 1
-                if j != 0:
-                    gauge += np.vdot(blochvectors[i,j-1,:,band],
-                                     blochvectors[i,j,:,band]) > 0
-                    neighbours += 1
-                if i != blochvectors.shape[0] - 1:
-                    gauge += np.vdot(blochvectors[i+1,j,:,band],
-                                     blochvectors[i,j,:,band]) > 0
-                    neighbours += 1
-                if j != blochvectors.shape[1] - 1:
-                    gauge += np.vdot(blochvectors[i,j+1,:,band],
-                                     blochvectors[i,j,:,band]) > 0
-                    neighbours += 1
-
-        iterations = 0
-        while gauge / neighbours < 0.99 and iterations < 10000:
-            iterations += 1
-            i = np.random.randint(0,blochvectors.shape[0])
-            j = np.random.randint(0,blochvectors.shape[1])
-            point_gauge = 0
-            if i != 0:
-                point_gauge += np.vdot(blochvectors[i-1,j,:,band],
-                                blochvectors[i,j,:,band])
-            if j != 0:
-                point_gauge += np.vdot(blochvectors[i,j-1,:,band],
-                                blochvectors[i,j,:,band])
-            if i != blochvectors.shape[0] - 1:
-                point_gauge += np.vdot(blochvectors[i+1,j,:,band],
-                                blochvectors[i,j,:,band])
-            if j != blochvectors.shape[1] - 1:
-                point_gauge += np.vdot(blochvectors[i,j+1,:,band],
-                                blochvectors[i,j,:,band])
-            if point_gauge < 0:
-                blochvectors[i,j,:,band] = - blochvectors[i,j,:,band]
-            
-            if iterations % 1000 == 0:
-                gauge = 0
-                neighbours = 0
-                for i in range(blochvectors.shape[0]):
-                    for j in range(blochvectors.shape[1]):
-                        if i != 0:
-                            gauge += np.vdot(blochvectors[i-1,j,:,band],
-                                            blochvectors[i,j,:,band]) > 0
-                            neighbours += 1
-                        if j != 0:
-                            gauge += np.vdot(blochvectors[i,j-1,:,band],
-                                            blochvectors[i,j,:,band]) > 0
-                            neighbours += 1
-                        if i != blochvectors.shape[0] - 1:
-                            gauge += np.vdot(blochvectors[i+1,j,:,band],
-                                            blochvectors[i,j,:,band]) > 0
-                            neighbours += 1
-                        if j != blochvectors.shape[1] - 1:
-                            gauge += np.vdot(blochvectors[i,j+1,:,band],
-                                            blochvectors[i,j,:,band]) > 0
-                            neighbours += 1
-        return blochvectors
+                    if np.vdot(blochvectors_gf[i-1,j,:,band], 
+                               blochvectors[i,j,:,band]) < 0:
+                        blochvectors_gf[i,j,:,band] = - blochvectors[i,j,:,band]
+                    else:
+                        blochvectors_gf[i,j,:,band] = blochvectors[i,j,:,band]
+                elif j != 0:
+                    if np.vdot(blochvectors_gf[i,j-1,:,band], 
+                               blochvectors[i,j,:,band]) < 0:
+                        blochvectors_gf[i,j,:,band] = - blochvectors[i,j,:,band]
+                    else:
+                        blochvectors_gf[i,j,:,band] = blochvectors[i,j,:,band]
+                else:
+                    blochvectors_gf[i,j,:,band] = blochvectors[i,j,:,band]
+    return blochvectors_gf
 
 def compute_zak_phase(hamiltonian, 
                       a_1, 
@@ -388,7 +342,7 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
     
     plot_bandstructure2D(energy_grid, a_1, a_2, 'test.png')
     
-    # gauge fixing
+    # gauge fixing (first attempt)
     blochvector_grid = gauge_fix_grid(blochvector_grid)
     
     # calculating the x and y derivatives of the blochvectors (multiplied by dk)
@@ -402,6 +356,10 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
         for j in range(yder.shape[1]):
             yder[i,j] = (blochvector_grid[i,j+1] - blochvector_grid[i,j]) / dky
     
+    # gauge fix derivatives
+    xder = gauge_fix_grid(xder)
+    yder = gauge_fix_grid(yder)
+
     # calculating Euler curvature at each point
     Eu = np.zeros((num_points,num_points), dtype='float')
     for i in range(Eu.shape[0]):
