@@ -3,16 +3,17 @@ import os
 import matplotlib.pyplot as plt
 from tight_binding.hamiltonians import square_hamiltonian_driven
 from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstructure2D, locate_nodes
-from tight_binding.topology import compute_zak_phase, locate_dirac_strings
+from tight_binding.topology import compute_zak_phase, locate_dirac_strings, compute_patch_euler_class
 
-plotting = True
+plotting = False
 slicing = False
 zak = False
 locate_ds = False
+patch_euler_class = True
 
 # PARAMETERS
-delta_A = 0
-delta_C = 0
+delta_A = -1
+delta_C = -3.5
 omega = 11
 A_x = 1
 A_y = 1
@@ -25,7 +26,7 @@ a_2 = np.array([0,1])
 num_points = 100
 num_steps = 100
 num_lines = 100
-lowest_quasi_energy = -np.pi
+lowest_quasi_energy = -3*np.pi/2
 offsets = np.zeros((3,2))
 
 main_directory = 'figures/square/SP4/driven/bandstructures'
@@ -160,3 +161,13 @@ if slicing:
         plt.ylabel('$E / J$')
         plt.savefig(save)
         plt.close()
+
+# PATCH EULER CLASS
+if patch_euler_class:
+    kxmin = np.pi / 2
+    kxmax = 3*np.pi / 2
+    kymin =-np.pi
+    kymax =-3*np.pi / 2
+    bands = [0,1]
+    chi = compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,H,num_points,omega,num_steps,lowest_quasi_energy)
+    print(chi)

@@ -309,7 +309,52 @@ def locate_dirac_strings(hamiltonian,
     plt.savefig(save)
     plt.close()
 
-def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_points,omega,num_steps,lowest_quasi_energy,method,regime):
+def compute_patch_euler_class(kxmin,
+                              kxmax,
+                              kymin,
+                              kymax,
+                              bands,
+                              hamiltonian,
+                              num_points=100,
+                              omega=0,
+                              num_steps=100,
+                              lowest_quasi_energy=-np.pi,
+                              method='trotter',
+                              regime='driven',
+                              divergence_threshold=5):
+    """Calculates a patch euler class over a square patch.
+    
+    Parameters
+    ----------
+    kxmin: float
+        The left boundary of the patch
+    kxmax: float
+        The right boundary of the patch
+    kymin: float
+        The bottom boundary of the patch
+    kymax: float
+        The top boundary of the patch
+    bands: numpy.array
+        The two bands over which to calculate the Euler class
+    hamiltonian: function
+        The bloch hamiltonian
+    num_points: int
+        The number of points along the path to evaluate the blochvectors at
+    omega: float
+        The angular frequency of the bloch hamiltonian in case of a driven 
+        system
+    num_steps: int
+        The number of steps to use in the calculation of the time evolution
+    lowest_quasi_energy: float
+        The lower bound of the 2pi interval in which to give the quasi energies
+    method: str
+        The method for calculating the time evolution: trotter or Runge-Kutta
+    regime: str
+        'driven' or 'static'
+    divergence_threshold: float
+        There will be divergent terms in the Euler curvature and Berry 
+        connections, terms above this threshold will be removed
+    """
     a_1 = np.array([1,0])
     a_2 = np.array([0,1])
     kx = np.linspace(kxmin,kxmax,num_points)
@@ -346,9 +391,50 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
     energy_grid, blochvector_grid = sort_energy_grid(energy_grid, 
                                                      blochvector_grid, regime)
     
-    plot_bandstructure2D(energy_grid, a_1, a_2, 'test.png')
+    # Plotting energies
+    E = energy_grid
+    if regime == 'driven':
+        top = lowest_quasi_energy + 2 * np.pi
+        bottom = lowest_quasi_energy
+        for band in range(E.shape[0]):
+            distance_to_top = np.abs(E[band] - top)
+            distance_to_bottom = np.abs(E[band] - bottom)
+            
+            threshold = 0.05 * 2 * np.pi
+            discontinuity_mask = distance_to_top < threshold
+            E[band] = np.where(discontinuity_mask, np.nan, E[band])
+            discontinuity_mask = distance_to_bottom < threshold
+            E[band] = np.where(discontinuity_mask, np.nan, E[band])
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf1 = ax.plot_surface(kx, ky, E[...,0], cmap=cm.YlGnBu,
+                                linewidth=0)
+    surf2 = ax.plot_surface(kx, ky, E[...,1], cmap=cm.PuRd,
+                                linewidth=0)
+    surf3 = ax.plot_surface(kx, ky, E[...,2], cmap=cm.YlOrRd,
+                                linewidth=0)
+    tick_values = np.linspace(-4,4,9) * np.pi / 2
+    tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
+    ax.set_xticks(tick_values)
+    ax.set_xticklabels(tick_labels)
+    ax.set_yticks(tick_values)
+    ax.set_yticklabels(tick_labels)
+    if regime == 'driven':
+        ztick_labels = ['$-2\pi$', '$-3\pi/2$', '$-\pi$', '$-\pi/2$', '0', 
+                        '$\pi/2$', '$\pi$', '$3\pi/2$', '$2\pi$']
+        ax.set_zticks(tick_values)
+        ax.set_zticklabels(ztick_labels)
+    ax.set_zlim(np.nanmin(E),np.nanmax(E))
+    ax.set_xlim(kxmin,kxmax)
+    ax.set_ylim(kymin,kymax)
+    ax.set_xlabel('$k_x$')
+    ax.set_ylabel('$k_y$')
+    ax.grid(False)
+    ax.set_box_aspect([1, 1, 2])
+    plt.show()
+    plt.close()
     
-    # gauge fixing (first attempt)
+    # gauge fixing
     blochvector_grid = gauge_fix_grid(blochvector_grid)
     
     # calculating the x and y derivatives of the blochvectors (multiplied by dk)
@@ -361,10 +447,6 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
     for i in range(yder.shape[0]):
         for j in range(yder.shape[1]):
             yder[i,j] = (blochvector_grid[i,j+1] - blochvector_grid[i,j]) / dky
-    
-    # gauge fix derivatives
-    xder = gauge_fix_grid(xder)
-    yder = gauge_fix_grid(yder)
 
     # calculating Euler curvature at each point
     Eu = np.zeros((num_points,num_points), dtype='float')
@@ -373,22 +455,40 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
             Eu[i,j] = (np.vdot(xder[i,j,:,bands[0]],yder[i,j,:,bands[1]])
                     - np.vdot(yder[i,j,:,bands[0]],xder[i,j,:,bands[1]]))
     
-    # Gauge fixing is not perfect so there might be divergent terms
-    # trying to get rid of them:
+    # There will diverging derivative across Dirac strings: trying to remove them
     for i in range(Eu.shape[0]):
         for j in range(Eu.shape[1]):
-            if np.abs(Eu[i,j]) > 5:
+            if np.abs(Eu[i,j]) > divergence_threshold:
                 if j != 0:
                     Eu[i,j] = Eu[i,j-1]
                 elif i != 0:
                     Eu[i,j] = Eu[i-1,j]
                 else:
                     shift = 0
-                    while np.abs(Eu[i,j]) > 5 and shift < 10:
+                    while np.abs(Eu[i,j]) > divergence_threshold and shift < 10:
                         shift += 1
                         Eu[i,j] = Eu[i + shift,j]
-                    if np.abs(Eu[i,j]) > 5:
+                if np.abs(Eu[i,j]) > divergence_threshold:
                         Eu[i,j] = 0
+
+    # Plotting Euler Curvature
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf1 = ax.plot_surface(kx[:-1,:-1], ky[:-1,:-1], Eu, cmap=cm.YlGnBu,
+                                linewidth=0)
+    tick_values = np.linspace(-4,4,9) * np.pi / 2
+    tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
+    ax.set_xticks(tick_values)
+    ax.set_xticklabels(tick_labels)
+    ax.set_yticks(tick_values)
+    ax.set_yticklabels(tick_labels)
+    ax.set_xlim(kxmin,kxmax)
+    ax.set_ylim(kymin,kymax)
+    ax.set_xlabel('$k_x$')
+    ax.set_ylabel('$k_y$')
+    ax.grid(False)
+    ax.set_box_aspect([1, 1, 2])
+    plt.show()
+    plt.close()
 
     # Doing y integrals
     integ_x = np.zeros(Eu.shape[0])
@@ -412,14 +512,49 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
         left[i] = - np.vdot(blochvector_grid[-2-i,-2,:,bands[0]],xder[-1-i,-1,:,bands[1]])
         down[i] = - np.vdot(blochvector_grid[0,-2-i,:,bands[0]],yder[0,-1-i,:,bands[1]])
     
+    # Removing divergences here as well
+    for i in range(len(right)):
+        if np.abs(right[i]) > 5:
+            if i != 0:
+                right[i] = right[i-1]
+            else:
+                right[i] = right[i+5]
+            if np.abs(right[i]) > 5:
+                right[i] = 0
+    for i in range(len(up)):
+        if np.abs(up[i]) > 5:
+            if i != 0:
+                up[i] = up[i-1]
+            else:
+                up[i] = up[i+5]
+            if np.abs(up[i]) > 5:
+                up[i] = 0
+    for i in range(len(left)):
+        if np.abs(left[i]) > 5:
+            if i != 0:
+                left[i] = left[i-1]
+            else:
+                left[i] = left[i+5]
+            if np.abs(left[i]) > 5:
+                left[i] = 0
+    for i in range(len(down)):
+        if np.abs(down[i]) > 5:
+            if i != 0:
+                down[i] = down[i-1]
+            else:
+                down[i] = down[i+5]
+            if np.abs(down[i]) > 5:
+                down[i] = 0
+    
     right = np.sum(right[1:] + right[:num_points-1]) / 2 * dkx
     up = np.sum(up[1:] + up[:num_points-1]) / 2 * dky
     left = np.sum(left[1:] + left[:num_points-1]) / 2 * dkx
     down = np.sum(down[1:] + down[:num_points-1]) / 2 * dky
+
     boundary_term = 1 / (2*np.pi) * (right + up + left + down)
 
-    print(surface_term)
-    print(boundary_term)
+    print('Surface Term:  ', surface_term)
+    print('Boundary Term: ', boundary_term)
     chi = (surface_term - boundary_term)
 
     return chi

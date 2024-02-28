@@ -6,12 +6,12 @@ from tight_binding.topology import compute_zak_phase, locate_dirac_strings
 
 plotting = True
 slicing = False
-zak = True
+zak = False
 locate_ds = False
 
 # PARAMETERS
-delta_A = -7
-delta_C = 1
+delta_A = 0
+delta_C = 0
 
 delta_B = - delta_A - delta_C
 
