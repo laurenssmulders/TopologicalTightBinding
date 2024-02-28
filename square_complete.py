@@ -8,16 +8,16 @@ from tight_binding.diagonalise import compute_eigenstates
 
 plotting = False
 slicing = False
-zak = False
-patch_euler_class = True
+zak = True
+patch_euler_class = False
 saving = True
 finite_geometry = False
-plot_from_save = True
+plot_from_save = False
 
 
 # PARAMETERS
-delta_A = -2.5
-delta_C = -2.5
+delta_A = -3
+delta_C = -3
 omega = 11
 A_x = 1
 A_y = 1
@@ -40,10 +40,10 @@ start = np.array([0,0])
 end = np.array([1,0])
 
 ### Euler class parameters
-kxmin= np.pi / 2
-kxmax= 3*np.pi / 2
-kymin = -3*np.pi /2
-kymax = -np.pi / 2
+kxmin= -np.pi
+kxmax= 0
+kymin = -np.pi - 0.01
+kymax = np.pi / 2
 bands = [0,1]
 
 ### Finite geometry parameters
