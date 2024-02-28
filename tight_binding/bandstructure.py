@@ -463,9 +463,9 @@ def locate_nodes(energy_grid,
     plt.ylabel('$k_y$')
     plt.gca().set_aspect('equal')
     plt.title(title)
+    plt.savefig(save)
     if show_plot:
         plt.show()
-    plt.savefig(save)
     plt.close()
 
 

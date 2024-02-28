@@ -6,18 +6,18 @@ from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstruct
 from tight_binding.topology import compute_zak_phase, compute_patch_euler_class
 from tight_binding.diagonalise import compute_eigenstates
 
-plotting = True
+plotting = False
 slicing = False
 zak = False
 patch_euler_class = False
 saving = True
 finite_geometry = False
-plot_from_save = False
+plot_from_save = True
 
 
 # PARAMETERS
-delta_A = 0
-delta_C = 0
+delta_A = -0.5
+delta_C = -0.5
 omega = 11
 A_x = 1
 A_y = 1
@@ -53,7 +53,7 @@ cut = 'x'
 
 ### Plotting parameters
 bands_to_plot = [1,1,1]
-node_threshold = 0.01
+node_threshold = 0.05
 
 
 
@@ -72,8 +72,10 @@ node_threshold = 0.01
 ################################################################################
 
 # CREATING A DIRECTORY
-name = 'square_driven_Ax_Ay_w_dJ1_dJ2_dA_dC_{A_x}_{A_y}_{omega}_{dJ1}_{dJ2}_{delta_A}_{delta_C}'.format(A_x=A_x,A_y=A_y,omega=omega,dJ1=dJ1,
-                                                                                                        dJ2=dJ2,delta_A=delta_A,delta_C=delta_C)
+name = 'square_driven_Ax_Ay_w_dJ1_dJ2_dA_dC_{A_x}_{A_y}_{omega}_{dJ1}_{dJ2}_{delta_A}_{delta_C}'.format(A_x=round(A_x,1),A_y=round(A_y,1),
+                                                                                                        omega=round(omega,1),dJ1=round(dJ1,1),
+                                                                                                        dJ2=round(dJ2,1),delta_A=round(delta_A,1),
+                                                                                                        delta_C=round(delta_C,1)).replace('.','p')
 main_directory = 'figures/square/all'
 directory = main_directory + '/' + name
 if saving:
@@ -282,12 +284,13 @@ if finite_geometry:
 
 
 if plot_from_save:
-    file = directory + '/grids/' + name +'_energies'
-    energies = np.load(energies)
+    file = directory + '/grids/' + name +'_energies.npy'
+    energies = np.load(file)
     #Getting the energies in the right range
     energies = (energies + 2*np.pi*np.floor((lowest_quasi_energy-energies) 
                                                 / (2*np.pi) + 1))
     plot_bandstructure2D(energies, a_1, a_2, 'test.png', bands_to_plot=bands_to_plot, lowest_quasi_energy=lowest_quasi_energy)
-    locate_nodes(energies, a_1, a_2, 'test.png', node_threshold=node_threshold, title=name)
+    node_save = directory + '/' + name + '_nodes.png'
+    locate_nodes(energies, a_1, a_2, node_save, node_threshold=node_threshold, title=name)
 
 
