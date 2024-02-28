@@ -158,7 +158,9 @@ def compute_zak_phase(hamiltonian,
             if i == 0:
                 ind = np.argsort(energies[i])
                 energies[i] = energies[i,ind]
-                blochvectors[i] = blochvectors[i][:,ind]
+                rows = np.array([0,1,2])
+                blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
+                                               ind[np.newaxis,:]]
             else:
                 ind = np.argsort(energies[i])
                 differences = np.zeros((3,), dtype='float')
@@ -174,12 +176,16 @@ def compute_zak_phase(hamiltonian,
                 minimum = np.argmin(differences)
                 ind = np.roll(ind, minimum)
                 energies[i] = energies[i,ind]
-                blochvectors[i] = blochvectors[i][:,ind]
+                rows = np.array([0,1,2])
+                blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
+                                               ind[np.newaxis,:]]
     elif regime == 'static':
         for i in range(energies.shape[0]):
             ind = np.argsort(energies[i])
             energies[i] = energies[i,ind]
-            blochvectors[i] = blochvectors[i][:,ind]
+            rows = np.array([0,1,2])
+            blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
+                                            ind[np.newaxis,:]]
 
     # Taking care of centre offsets
     blochvectors[-1] = np.matmul(offset_matrix, blochvectors[0])

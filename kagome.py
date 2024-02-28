@@ -29,7 +29,6 @@ plt.show()
 plt.close()
 
 check = np.zeros(vectors.shape[:2])
-print(check.shape[1])
 for i in range(check.shape[0]):
     for j in range(check.shape[1]):
         k = np.array([kx[i,j],ky[i,j]])
@@ -42,7 +41,7 @@ plt.show()
 vectors_gf = gauge_fix_grid(vectors)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-surf = ax.plot_surface(kx, ky, vectors[:,:,2,0], cmap=cm.YlGnBu, linewidth=0)
+surf = ax.plot_surface(kx, ky, vectors_gf[:,:,2,0], cmap=cm.YlGnBu, linewidth=0)
 plt.show()
 
 #chi = compute_patch_euler_class(-1,1,-1,1,[1,2],H,100,0,0,0,0,'static')

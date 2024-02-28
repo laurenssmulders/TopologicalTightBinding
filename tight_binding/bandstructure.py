@@ -31,7 +31,9 @@ def sort_energy_path(energies, blochvectors,
             if i == 0:
                 ind = np.argsort(energies[i])
                 energies[i] = energies[i,ind]
-                blochvectors[i] = blochvectors[i][:,ind]
+                rows = np.array([0,1,2])
+                blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
+                                                  ind[np.newaxis,:]]
             else:
                 ind = np.argsort(energies[i])
                 differences = np.zeros((3,), dtype='float')
@@ -47,12 +49,16 @@ def sort_energy_path(energies, blochvectors,
                 minimum = np.argmin(differences)
                 ind = np.roll(ind, minimum)
                 energies[i] = energies[i,ind]
-                blochvectors[i] = blochvectors[i][:,ind]
+                rows = np.array([0,1,2])
+                blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
+                                               ind[np.newaxis,:]]
     elif regime == 'static':
         for i in range(energies.shape[0]):
             ind = np.argsort(energies[i])
             energies[i] = energies[i,ind]
-            blochvectors[i] = blochvectors[i][:,ind]
+            rows = np.array([0,1,2])
+            blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
+                                               ind[np.newaxis,:]]
     
     return energies, blochvectors
 
@@ -84,7 +90,10 @@ def sort_energy_grid(energy_grid,
                 if i == 0 and j == 0:
                     ind = np.argsort(energy_grid[i,j])
                     energies_sorted[i,j] = energy_grid[i,j,ind]
-                    blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+                    rows = np.array([0,1,2])
+                    blochvectors_sorted[i,j] = blochvector_grid[i,j,
+                                                            rows[:,np.newaxis],
+                                                            ind[np.newaxis,:]]
                 elif j == 0:
                     ind = np.argsort(energy_grid[i,j])
                     differences = np.zeros((3,), dtype='float')
@@ -100,7 +109,10 @@ def sort_energy_grid(energy_grid,
                     minimum = np.argmin(differences)
                     ind = np.roll(ind, minimum)
                     energies_sorted[i,j] = energy_grid[i,j,ind]
-                    blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+                    rows = np.array([0,1,2])
+                    blochvectors_sorted[i,j] = blochvector_grid[i,j,
+                                                            rows[:,np.newaxis],
+                                                            ind[np.newaxis,:]]
                 else:
                     ind = np.argsort(energy_grid[i,j])
                     differences = np.zeros((3,), dtype='float')
@@ -116,13 +128,20 @@ def sort_energy_grid(energy_grid,
                     minimum = np.argmin(differences)
                     ind = np.roll(ind, minimum)
                     energies_sorted[i,j] = energy_grid[i,j,ind]
-                    blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+                    rows = np.array([0,1,2])
+                    blochvectors_sorted[i,j] = blochvector_grid[i,j,
+                                                            rows[:,np.newaxis],
+                                                            ind[np.newaxis,:]]
+
     elif regime == 'static':
         for i in range(energy_grid.shape[0]):
             for j in range(energy_grid.shape[1]):
                 ind = np.argsort(energy_grid[i,j])
                 energies_sorted[i,j] = energy_grid[i,j,ind]
-                blochvectors_sorted[i,j] = blochvector_grid[i,j,:,ind]
+                rows = np.array([0,1,2])
+                blochvectors_sorted[i,j] = blochvector_grid[i,j,
+                                                            rows[:,np.newaxis],
+                                                            ind[np.newaxis,:]]
     
     return energies_sorted, blochvectors_sorted
 
