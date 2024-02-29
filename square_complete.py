@@ -6,13 +6,13 @@ from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstruct
 from tight_binding.topology import compute_zak_phase, compute_patch_euler_class
 from tight_binding.diagonalise import compute_eigenstates
 
-plotting = True
+plotting = False
 slicing = False
 zak = False
 patch_euler_class = False
 saving = True
-finite_geometry = False
-plot_from_save = True
+finite_geometry = True
+plot_from_save = False
 
 
 # PARAMETERS
@@ -22,7 +22,7 @@ omega = 11
 A_x = 1
 A_y = 1
 dJ1 = 0
-dJ2 = -1.5
+dJ2 = -0.9
 
 delta_B = -delta_A - delta_C
 
@@ -31,7 +31,7 @@ a_2 = np.array([0,1])
 num_points = 100
 num_steps = 100
 num_lines = 100
-lowest_quasi_energy = -np.pi / 4
+lowest_quasi_energy = np.pi / 2
 offsets = np.zeros((3,2))
 
 
@@ -48,7 +48,7 @@ bands = [1,2]
 
 ### Finite geometry parameters
 L = 30
-cut = 'x'
+cut = 'y'
 
 
 ### Plotting parameters

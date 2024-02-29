@@ -31,7 +31,7 @@ def sort_energy_path(energies, blochvectors,
             if i == 0:
                 ind = np.argsort(energies[i])
                 energies[i] = energies[i,ind]
-                rows = np.array([0,1,2])
+                rows = np.linspace(0,len(ind)-1,len(ind)).astype('int')
                 blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
                                                   ind[np.newaxis,:]]
             else:
@@ -49,14 +49,14 @@ def sort_energy_path(energies, blochvectors,
                 minimum = np.argmin(differences)
                 ind = np.roll(ind, minimum)
                 energies[i] = energies[i,ind]
-                rows = np.array([0,1,2])
+                rows = np.linspace(0,len(ind)-1,len(ind)).astype('int')
                 blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
                                                ind[np.newaxis,:]]
     elif regime == 'static':
         for i in range(energies.shape[0]):
             ind = np.argsort(energies[i])
             energies[i] = energies[i,ind]
-            rows = np.array([0,1,2])
+            rows = np.linspace(0,len(ind)-1,len(ind)).astype('int')
             blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
                                                ind[np.newaxis,:]]
     
