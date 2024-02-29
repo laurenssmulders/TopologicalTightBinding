@@ -268,7 +268,6 @@ if finite_geometry:
     plt.xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','','0','','$\pi$'])
     plt.xlim(-np.pi, np.pi)
     plt.ylim(lowest_quasi_energy, lowest_quasi_energy + 2*np.pi)
-    plt.show()
     if saving:
         finite_dir = directory + '/' + 'finite_geometry'
         if not os.path.isdir(finite_dir):
@@ -279,6 +278,7 @@ if finite_geometry:
         np.save(vector_save, blochvectors)
         plot_save = finite_dir + '/' + name + 'finite_geometry_bands_' + cut + '.png'
         plt.savefig(plot_save)
+    plt.show()
     plt.close()
 
 
