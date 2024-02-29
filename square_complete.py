@@ -16,13 +16,13 @@ plot_from_save = True
 
 
 # PARAMETERS
-delta_A = 0
-delta_C = 0
+delta_A = -2.5
+delta_C = -2.5
 omega = 11
 A_x = 1
 A_y = 1
-dJ1 = 1
-dJ2 = 0
+dJ1 = 0
+dJ2 = 0.1
 
 delta_B = -delta_A - delta_C
 
@@ -36,14 +36,14 @@ offsets = np.zeros((3,2))
 
 
 ### Zak phase parameters
-start = np.array([0,0])
-end = np.array([1,0])
+start = np.array([0.05,0])
+end = np.array([0.05,1])
 
 ### Euler class parameters
-kxmin= -np.pi
-kxmax= 0
-kymin = -np.pi - 0.01
-kymax = np.pi / 2
+kxmin= 0
+kxmax= 0.5*np.pi
+kymin = 0
+kymax = 0.5*np.pi
 bands = [0,1]
 
 ### Finite geometry parameters
