@@ -21,8 +21,8 @@ delta_C = -2.5
 omega = 11
 A_x = 1
 A_y = 1
-dJ1x = 0.2
-dJ1y = 0.2
+dJ1x = -0.2
+dJ1y = -0.2
 dJ2 = -0.9
 
 delta_B = -delta_A - delta_C
@@ -292,6 +292,6 @@ if plot_from_save:
                                                 / (2*np.pi) + 1))
     plot_bandstructure2D(energies, a_1, a_2, 'test.png', bands_to_plot=bands_to_plot, lowest_quasi_energy=lowest_quasi_energy)
     node_save = directory + '/' + name + '_nodes.png'
-    locate_nodes(energies, a_1, a_2, node_save, node_threshold=node_threshold, title=name)
+    locate_nodes(energies, a_1, a_2, node_save, node_threshold=node_threshold, title=name[14:])
 
 
