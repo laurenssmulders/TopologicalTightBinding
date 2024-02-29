@@ -21,8 +21,8 @@ delta_C = -2.5
 omega = 11
 A_x = 1
 A_y = 1
-dJ1 = -0.1
-dJ2 = 0.1
+dJ1 = 0
+dJ2 = -0.2
 
 delta_B = -delta_A - delta_C
 
@@ -40,11 +40,11 @@ start = np.array([0.05,0])
 end = np.array([0.05,1])
 
 ### Euler class parameters
-kxmin= 0
-kxmax= 0.5*np.pi
-kymin = 0
-kymax = 0.5*np.pi
-bands = [0,1]
+kxmin= 0.4*np.pi
+kxmax= 1.6*np.pi
+kymin = 0.8*np.pi
+kymax = 1.2*np.pi
+bands = [1,2]
 
 ### Finite geometry parameters
 L = 30
