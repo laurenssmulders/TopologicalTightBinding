@@ -16,12 +16,13 @@ plot_from_save = True
 
 
 # PARAMETERS
-delta_A = -5.5
-delta_C = 0.5
+delta_A = -2.5
+delta_C = -2.5
 omega = 11
 A_x = 1
 A_y = 1
-dJ1 = 0
+dJ1x = 0.2
+dJ1y = 0
 dJ2 = -0.9
 
 delta_B = -delta_A - delta_C
@@ -36,15 +37,15 @@ offsets = np.zeros((3,2))
 
 
 ### Zak phase parameters
-start = np.array([0.5,0])
-end = np.array([0.5,1])
+start = np.array([0,0])
+end = np.array([1,0])
 
 ### Euler class parameters
-kxmin= 0.4*np.pi
-kxmax= 1.6*np.pi
-kymin = 0.8*np.pi
-kymax = 1.2*np.pi
-bands = [1,2]
+kxmin= 0.55*np.pi
+kxmax= np.pi
+kymin = -0.7*np.pi
+kymax = 0
+bands = [0,1]
 
 ### Finite geometry parameters
 L = 30
@@ -72,8 +73,8 @@ node_threshold = 0.05
 ################################################################################
 
 # CREATING A DIRECTORY
-name = 'square_driven_Ax_Ay_w_dJ1_dJ2_dA_dC_{A_x}_{A_y}_{omega}_{dJ1}_{dJ2}_{delta_A}_{delta_C}'.format(A_x=round(A_x,1),A_y=round(A_y,1),
-                                                                                                        omega=round(omega,1),dJ1=round(dJ1,1),
+name = 'square_driven_Ax_Ay_w_dJ1x_dJ1y_dJ2_dA_dC_{A_x}_{A_y}_{omega}_{dJ1x}_{dJ1y}_{dJ2}_{delta_A}_{delta_C}'.format(A_x=round(A_x,1),A_y=round(A_y,1),
+                                                                                                        omega=round(omega,1),dJ1x=round(dJ1x,1),dJ1y=round(dJ1y,1),
                                                                                                         dJ2=round(dJ2,1),delta_A=round(delta_A,1),
                                                                                                         delta_C=round(delta_C,1)).replace('.','p')
 main_directory = 'figures/square/all'
@@ -86,7 +87,7 @@ if saving:
 
 # BLOCH HAMILTONIAN
 H = square_hamiltonian_driven(delta_A, delta_B, delta_C, J_ab_0=1, J_ac_0=1, 
-                              J_bc_0=1, J_ac_1x=1+dJ1, J_bc_1y=1+dJ1, 
+                              J_bc_0=1, J_ac_1x=1+dJ1x, J_bc_1y=1+dJ1y, 
                               J_ab_2m=1+dJ2, A_x=A_x, A_y=A_y, omega=omega)
 
 
@@ -219,8 +220,8 @@ if finite_geometry:
             J_ab_0=1,
             J_ac_0=1,
             J_bc_0=1,
-            J_ac_1x=1+dJ1,
-            J_bc_1y=1+dJ1,
+            J_ac_1x=1+dJ1x,
+            J_bc_1y=1+dJ1y,
             J_ab_2m=1+dJ2,
             A_x=A_x,
             A_y=A_y,
@@ -236,8 +237,8 @@ if finite_geometry:
             J_ab_0=1,
             J_ac_0=1,
             J_bc_0=1,
-            J_ac_1x=1+dJ1,
-            J_bc_1y=1+dJ1,
+            J_ac_1x=1+dJ1x,
+            J_bc_1y=1+dJ1y,
             J_ab_2m=1+dJ2,
             A_x=A_x,
             A_y=A_y,
