@@ -8,7 +8,7 @@ from tight_binding.diagonalise import compute_eigenstates
 
 plotting = False
 slicing = True
-zak = True
+zak = False
 patch_euler_class = False
 saving = True
 finite_geometry = False
