@@ -6,13 +6,13 @@ from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstruct
 from tight_binding.topology import compute_zak_phase, compute_patch_euler_class
 from tight_binding.diagonalise import compute_eigenstates
 
-plotting = True
+plotting = False
 slicing = False
 zak = False
-patch_euler_class = False
+patch_euler_class = True
 saving = True
 finite_geometry = False
-plot_from_save = True
+plot_from_save = False
 
 
 # PARAMETERS
@@ -25,7 +25,7 @@ dJ1x = -0.7
 dJ1y = 0.7
 dJ2 = -0.9
 
-delta_B = -delta_A - delta_C
+delta_B = - delta_A - delta_C
 
 a_1 = np.array([1,0])
 a_2 = np.array([0,1])
@@ -37,14 +37,14 @@ offsets = np.zeros((3,2))
 
 
 ### Zak phase parameters
-start = np.array([0,0])
-end = np.array([1,0])
+start = np.array([0.5,0])
+end = np.array([0.5,1])
 
 ### Euler class parameters
-kxmin= 0.55*np.pi
-kxmax= np.pi
-kymin = -0.7*np.pi
-kymax = 0
+kxmin= -1.1*np.pi/2
+kxmax= 1.1*np.pi/2
+kymin = -np.pi/2
+kymax = np.pi/2
 bands = [0,1]
 
 ### Finite geometry parameters
