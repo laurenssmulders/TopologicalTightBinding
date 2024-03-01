@@ -22,7 +22,7 @@ omega = 9
 A_x = 1
 A_y = 1
 dJ1x = -0.7
-dJ1y = 0.9
+dJ1y = 0.5
 dJ2 = -0.9
 
 delta_B = - delta_A - delta_C
