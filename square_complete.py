@@ -16,7 +16,7 @@ plot_from_save = True
 
 
 # PARAMETERS
-delta_A = 1.7
+delta_A = 1.6
 delta_C = -3
 omega = 9
 A_x = 1
