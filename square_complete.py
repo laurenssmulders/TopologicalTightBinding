@@ -6,7 +6,7 @@ from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstruct
 from tight_binding.topology import compute_zak_phase, compute_patch_euler_class
 from tight_binding.diagonalise import compute_eigenstates
 
-plotting = False
+plotting = True
 slicing = False
 zak = True
 patch_euler_class = False
@@ -17,7 +17,7 @@ plot_from_save = True
 
 # PARAMETERS
 delta_A = 0
-delta_C = -3
+delta_C = -3.5
 omega = 11
 A_x = 1
 A_y = 1
