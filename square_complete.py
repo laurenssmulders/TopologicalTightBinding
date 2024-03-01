@@ -21,8 +21,8 @@ delta_C = -3
 omega = 9
 A_x = 1
 A_y = 1
-dJ1x = -0.5
-dJ1y = 0.9
+dJ1x = -0.9
+dJ1y = 0.5
 dJ2 = -0.9
 
 delta_B = - delta_A - delta_C
