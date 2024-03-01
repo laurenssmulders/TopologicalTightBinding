@@ -7,12 +7,12 @@ from tight_binding.topology import compute_zak_phase, compute_patch_euler_class
 from tight_binding.diagonalise import compute_eigenstates
 
 plotting = False
-slicing = True
+slicing = False
 zak = False
 patch_euler_class = False
 saving = True
 finite_geometry = False
-plot_from_save = False
+plot_from_save = True
 
 
 # PARAMETERS
@@ -48,7 +48,7 @@ kymax = np.pi/2
 bands = [0,1]
 
 ### Finite geometry parameters
-L = 30
+L = 50
 cut = 'y'
 
 
