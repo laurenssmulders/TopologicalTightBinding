@@ -11,8 +11,8 @@ slicing = False
 zak = False
 patch_euler_class = False
 saving = True
-finite_geometry = False
-plot_from_save = True
+finite_geometry = True
+plot_from_save = False
 
 
 # PARAMETERS
