@@ -16,8 +16,8 @@ plot_from_save = True
 
 
 # PARAMETERS
-delta_A = -0.5
-delta_C = -2
+delta_A = 0
+delta_C = -2.5
 omega = 11
 A_x = 1
 A_y = 1
@@ -32,7 +32,7 @@ a_2 = np.array([0,1])
 num_points = 100
 num_steps = 100
 num_lines = 100
-lowest_quasi_energy = np.pi / 2
+lowest_quasi_energy = -np.pi / 2
 offsets = np.zeros((3,2))
 
 
