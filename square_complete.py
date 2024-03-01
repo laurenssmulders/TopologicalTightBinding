@@ -16,8 +16,8 @@ plot_from_save = True
 
 
 # PARAMETERS
-delta_A = -1
-delta_C = -1
+delta_A = -1.5
+delta_C = -2.5
 omega = 11
 A_x = 1
 A_y = 1
@@ -37,8 +37,8 @@ offsets = np.zeros((3,2))
 
 
 ### Zak phase parameters
-start = np.array([0,0])
-end = np.array([0,1])
+start = np.array([0.5,0])
+end = np.array([0.5,1])
 
 ### Euler class parameters
 kxmin= 0.55*np.pi
