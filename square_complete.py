@@ -8,17 +8,17 @@ from tight_binding.diagonalise import compute_eigenstates
 
 plotting = False
 slicing = False
-zak = False
+zak = True
 patch_euler_class = False
 saving = True
-finite_geometry = True
+finite_geometry = False
 plot_from_save = False
 
 
 # PARAMETERS
 delta_A = 3
 delta_C = -3
-omega = 9
+omega = 10
 A_x = 1
 A_y = 1
 dJ1x = -0.7
@@ -37,8 +37,8 @@ offsets = np.zeros((3,2))
 
 
 ### Zak phase parameters
-start = np.array([0,0])
-end = np.array([0,1])
+start = np.array([0.5,0])
+end = np.array([0.5,1])
 
 ### Euler class parameters
 kxmin= np.pi/2
