@@ -8,7 +8,7 @@ from tight_binding.diagonalise import compute_eigenstates
 
 plotting = False
 slicing = False
-zak = False
+zak = True
 patch_euler_class = False
 saving = True
 finite_geometry = False
@@ -16,7 +16,7 @@ plot_from_save = True
 
 
 # PARAMETERS
-delta_A = 2.5
+delta_A = 3.5
 delta_C = -3
 omega = 9
 A_x = 1
