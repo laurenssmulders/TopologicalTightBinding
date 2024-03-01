@@ -6,7 +6,7 @@ from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstruct
 from tight_binding.topology import compute_zak_phase, compute_patch_euler_class
 from tight_binding.diagonalise import compute_eigenstates
 
-plotting = True
+plotting = False
 slicing = False
 zak = True
 patch_euler_class = False
