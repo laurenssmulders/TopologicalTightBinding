@@ -23,7 +23,7 @@ omega = 11
 A_x = 1
 A_y = 1
 dJ1x = -0.7
-dJ1y = 0.7
+dJ1y = 0.6
 dJ2 = 0
 
 delta_B = - delta_A - delta_C
