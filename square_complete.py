@@ -17,8 +17,8 @@ edge_state_localisation = False
 
 
 # PARAMETERS
-delta_A = 1.5
-delta_C = -4.5
+delta_A = 2
+delta_C = -5
 omega = 11
 A_x = 1
 A_y = 1
