@@ -23,7 +23,7 @@ omega = 11
 A_x = 1
 A_y = 1
 dJ1x = -0.7
-dJ1y = 0.6
+dJ1y = 0.5
 dJ2 = 0
 
 delta_B = - delta_A - delta_C
@@ -38,8 +38,8 @@ offsets = np.zeros((3,2))
 
 
 ### Zak phase parameters
-start = np.array([0,0])
-end = np.array([0,1])
+start = np.array([0.5,0])
+end = np.array([0.5,1])
 
 ### Euler class parameters
 kxmin= np.pi/2
