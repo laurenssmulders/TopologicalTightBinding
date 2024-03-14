@@ -6,18 +6,18 @@ from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstruct
 from tight_binding.topology import compute_zak_phase, compute_patch_euler_class
 from tight_binding.diagonalise import compute_eigenstates
 
-plotting = True
+plotting = False
 slicing = False
-zak = True
+zak = False
 patch_euler_class = False
 saving = True
 finite_geometry = False
-plot_from_save = True
-edge_state_localisation = False
+plot_from_save = False
+edge_state_localisation = True
 
 
 # PARAMETERS
-delta_A = 5
+delta_A = 3
 delta_C = -3
 omega = 9
 A_x = 1
@@ -49,9 +49,8 @@ kymax = np.pi/2
 bands = [0,1]
 
 ### Finite geometry parameters
-L = 30
+L = 100
 cut = 'y'
-gaps = [0,1]
 
 
 ### Plotting parameters
@@ -275,8 +274,8 @@ if finite_geometry:
         finite_dir = directory + '/' + 'finite_geometry'
         if not os.path.isdir(finite_dir):
             os.mkdir(finite_dir)
-        energy_save = finite_dir + '/' + name + '_finite_geometry_energies_' + cut 
-        vector_save = finite_dir + '/' + name + '_finite_geometry_vectors_' + cut
+        energy_save = finite_dir + '/' + name + '_finite_geometry_energies_' + cut + '.npy'
+        vector_save = finite_dir + '/' + name + '_finite_geometry_vectors_' + cut + '.npy'
         np.save(energy_save, E)
         np.save(vector_save, blochvectors)
         plot_save = finite_dir + '/' + name + 'finite_geometry_bands_' + cut + '.png'
@@ -284,30 +283,59 @@ if finite_geometry:
     plt.show()
     plt.close()
 
-    if edge_state_localisation:
-        for i in range(len(gaps)):
-            localisation = np.zeros(L)
-            for j in range(len(k)):
-                ind = np.argsort(E[j])
-                rows = np.linspace(0,len(ind)-1,len(ind)).astype('int')
-                psi1 = blochvectors[j,rows[:,np.newaxis],ind[np.newaxis,:]][:,(gaps[i]+1)*L]
-                psi2 = blochvectors[j,rows[:,np.newaxis],ind[np.newaxis,:]][:,(gaps[i]+1)*L + 1]
-                localisation_temp = np.zeros(L)
-                for position in range(L):
-                    localisation_temp[position] = 1/6*(np.abs(psi1[3*position])**2 
-                                                + np.abs(psi1[3*position+1])**2 
-                                                + np.abs(psi1[3*position+2])**2
-                                                + np.abs(psi2[3*position])**2 
-                                                + np.abs(psi2[3*position+1])**2 
-                                                + np.abs(psi2[3*position+2])**2)
-                localisation = localisation + localisation_temp
-            localisation = localisation / len(k)
-            positions = np.linspace(0,L-1,L)
-            plt.scatter(positions, localisation, 
-                        label='Gap {gap}'.format(gap=gaps[i]))
-        plt.legend()
-        plt.show()
-        plt.close()
+
+# EDGE STATE LOCALISATION
+if edge_state_localisation:
+    loc_dir = directory + '/' + 'finite_geometry' + '/' + 'localisation'
+    if not os.path.isdir(loc_dir):
+        os.mkdir(loc_dir)
+
+    finite_dir = directory + '/' + 'finite_geometry'
+    energy_save = finite_dir + '/' + name + '_finite_geometry_energies_' + cut + '.npy'
+    vector_save = finite_dir + '/' + name + '_finite_geometry_vectors_' + cut + '.npy'
+    k = np.linspace(-np.pi, np.pi, num_points)
+    E = np.load(energy_save)
+    blochvectors = np.load(vector_save)
+
+    for state in range(E.shape[1]):
+        loc = np.zeros(blochvectors.shape[1]//3)
+        amplitudes = np.square(np.abs(blochvectors[0,:,state])) #localisation at a specific k
+        for i in range(len(loc)):
+            loc[i] = np.sum(amplitudes[3*i:3*i+3])
+        #for j in range(len(k)):
+            #amplitudes = np.square(np.abs(blochvectors[j,:,state]))
+            #kloc = np.zeros(blochvectors.shape[1]//3)
+            #for i in range(len(kloc)):
+                #kloc[i] = np.sum(amplitudes[3*i:3*i+3])
+            #loc += kloc
+        #loc = loc / len(k) # averaging localisation over all k
+
+        #plotting
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,15))
+        colours = list(np.zeros(E.shape[1]))
+        for i in range(E.shape[1]):
+            if i == state:
+                ax1.plot(k, E[:,i], c='magenta', zorder=10, linewidth=2)
+            else:
+                ax1.plot(k, E[:,i], c='0', zorder=1)
+        ax1.set_ylabel('$2\pi E / \omega$')
+        ax1.set_yticks([-2*np.pi, -3/2*np.pi, -np.pi, -1/2*np.pi, 0, 1/2*np.pi, np.pi, 
+                    3/2*np.pi, 2*np.pi], ['$-2\pi$','$-3/2\pi$','$-\pi$','$-1/2\pi$',
+                                        '$0$','$1/2\pi$','$\pi$','$3/2\pi$','$2\pi$'])
+        if cut == 'x':
+            ax1.set_xlabel('$k_y$')
+        elif cut == 'y':
+            ax1.set_xlabel('$k_x$')
+        ax1.set_xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','','0','','$\pi$'])
+        ax1.set_xlim(-np.pi, np.pi)
+        ax1.set_ylim(lowest_quasi_energy, lowest_quasi_energy + 2*np.pi)
+
+        positions = np.linspace(0,blochvectors.shape[1] / 3,blochvectors.shape[1] // 3)
+        ax2.scatter(positions, loc)
+        save = loc_dir + '/' + name + '_state_' + str(state)
+        fig.savefig(save)
+        plt.close(fig)
+
                 
        
 
