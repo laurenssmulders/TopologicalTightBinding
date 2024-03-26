@@ -1,15 +1,57 @@
 import numpy as np
-from tight_binding.bandstructure import locate_nodes, plot_bandstructure2D
-from tight_binding.topology import locate_dirac_strings
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from tight_binding.topology import impose_zak_phases_square
 
-name = 'SP3_driven_Ax_w_dA_dC_1_9_-7_1'
-file = 'figures/square/SP3/driven/bandstructures/' + name + '/' + name + '_grids/' + name + '_grid.npy'
-energies = np.load(file)
+blochvectors = impose_zak_phases_square(2,5,0,0)
 
-a_1 = np.array([1,0])
-a_2 = np.array([0,1])
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+kx = np.linspace(0,1,100)
+ky = np.linspace(0,1,100)
+kx, ky = np.meshgrid(kx,ky,indexing='ij')
 
-locate_nodes(energies, a_1, a_2, 'test.png', node_threshold=0.1)
+xpath = blochvectors[:,8]
+ypath = blochvectors[52,:]
 
-plot_bandstructure2D(energies, a_1, a_2, 'test.png', lowest_quasi_energy=-np.pi / 4, bands_to_plot=[1,1,1])
+overlaps = np.ones((xpath.shape[0], 3), dtype='complex')
+for i in range(xpath.shape[0] - 1):
+    for band in range(3):
+        overlaps[i, band] = np.vdot(xpath[i,:,band], 
+                                    xpath[i+1,:,band])
+for band in range(3):
+    overlaps[-1, band] = np.vdot(xpath[-1,:,band], 
+                                    xpath[0,:,band])
+    
+zak_phases = np.zeros((3,), dtype='complex')
+for band in range(3):
+    print(np.prod(overlaps[:,band]))
+    zak_phases[band] = 1j*np.log(np.prod(overlaps[:,band]))
+
+print('Zak phase 1: ',np.real(zak_phases) / np.pi)
+
+overlaps = np.ones((ypath.shape[0], 3), dtype='complex')
+for i in range(ypath.shape[0] - 1):
+    for band in range(3):
+        overlaps[i, band] = np.vdot(ypath[i,:,band], 
+                                    ypath[i+1,:,band])
+for band in range(3):
+    overlaps[-1, band] = np.vdot(ypath[-1,:,band], 
+                                    ypath[0,:,band])
+    
+zak_phases = np.zeros((3,), dtype='complex')
+for band in range(3):
+    zak_phases[band] = 1j*np.log(np.prod(overlaps[:,band]))
+
+print('Zak phase 2: ', np.real(zak_phases) / np.pi)
+
+surf = ax.plot_surface(kx, ky, blochvectors[:,:,0,1], cmap=cm.YlGnBu,
+                       linewidth=0)
+ax.set_xlabel('$k_x$')
+ax.set_ylabel('$k_y$')
+ax.grid(False)
+ax.set_box_aspect([1, 1, 2])
+plt.show()
+plt.close()
+
+
 

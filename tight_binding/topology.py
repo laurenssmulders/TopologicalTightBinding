@@ -559,4 +559,77 @@ def compute_patch_euler_class(kxmin,
 
     return chi
     
+def impose_zak_phases_square(gamma_1_axis, 
+                             gamma_1_angle,
+                             gamma_2_axis,
+                             gamma_2_angle,
+                             V_0=np.identity(3),
+                             num_points=100):
+    """Constructs a blochvector structure for given zak_phases
+    
+    Parameters
+    ----------
+    gamma_1_axis: int
+        The axis about which to rotate the blochvector dreibein along paths
+        parallel to b1.
+    gamma_1_angle: int
+        The multiple of pi to rotate the blochvector dreibein by along paths
+        parallel to b1.
+    gamma_1_axis: int
+        The axis about which to rotate the blochvector dreibein along paths
+        parallel to b2.
+    gamma_1_angle: int
+        The multiple of pi to rotate the blochvector dreibein by along paths
+        parallel to b1.
+    V_0: 2D array
+        The blochvectors at the origin.
+    num_points: int
+        The number of k points along each direction.
 
+    Returns
+    -------
+    blochvectors: 4D array
+        An array of shape (num_points,num_points,3,3), where
+        blochvectors[i,j,:,k] is the blochvector for the band k at the point
+        k = i / num_points * b1 + j / num_points * b2.
+    """
+    blochvectors = np.zeros((num_points,num_points,3,3)).astype('float')
+    blochvectors[0,0] = V_0
+
+    def R(phi,n):
+        if n[0]**2 + n[1]**2 <= 1e-5:
+                e0 = np.array([1,0,0])
+                e1 = np.array([0,n[2],0])
+                e2 = n
+        else:
+            e0 = np.array([-n[1],n[0],0]) / (n[0]**2+n[1]**2)**0.5
+            e1 = (np.array([-n[0]*n[2],-n[1]*n[2],n[0]**2 + n[1]**2]) 
+                  / (n[0]**2 + n[1]**2)**0.5)
+            e2 = n
+        S = np.zeros((3,3)).astype('float')
+        S[:,0] = e0
+        S[:,1] = e1
+        S[:,2] = e2
+        rot_z = np.array([
+            [np.cos(phi),-np.sin(phi),0],
+            [np.sin(phi),np.cos(phi),0],
+            [0,0,1]
+        ])
+        rot = S @ rot_z @ np.transpose(S)
+        return rot
+    
+    # zak phase along b1
+    n = V_0[:,gamma_1_axis]
+    for i in range(blochvectors.shape[0]):
+        blochvectors[i,0] = R(gamma_1_angle*np.pi*i/num_points,n) @ V_0
+    
+    # zak phases along b2
+    for i in range(blochvectors.shape[0]):
+        n = blochvectors[i,0,:,gamma_2_axis]
+        for j in range(blochvectors.shape[1]):
+            blochvectors[i,j] = (R(gamma_2_angle*np.pi*j/num_points,n)
+                                 @ blochvectors[i,0])
+            
+    return blochvectors
+            
+    
