@@ -7,7 +7,7 @@ import scipy.linalg as la
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from .diagonalise import compute_eigenstates
-from .utilitities import compute_reciprocal_lattice_vectors_2D
+from .utilitities import compute_reciprocal_lattice_vectors_2D, gell_mann
 from .bandstructure import sort_energy_grid, plot_bandstructure2D
 
 def gauge_fix_path(blochvectors):
@@ -631,5 +631,98 @@ def impose_zak_phases_square(gamma_1_axis,
                                  @ blochvectors[i,0])
             
     return blochvectors
-            
+
+def find_bloch_hamiltonian(energies,
+                           blochvectors,
+                           period):
+    """Defines the time evolution operator throughout the Brillouin zone after
+    one period.
     
+    Parameters
+    ----------
+    energies: 3D array
+        Array of shape (n,n,3) where energies[i,j,k] is the quasienergy of band
+        k at position i,j.
+    blochvectors: 4D array
+        Array of shape (n,n,3,3) where blochvectors[i,j,:,k] is the blochvector
+        of band k at position i,j.
+    period: float
+        The periodicity of the corresponding desired hamiltonian.
+    
+    Returns
+    -------
+    hamiltonian: function
+        A function of time returning a 4D array, where hamiltonian(t)[i,j] is
+        the bloch hamiltonian at position i,j at time t.
+    """
+    # Calculating H in U=exp(iH)
+    exponent_matrix = np.zeros(blochvectors.shape, dtype=float)
+    for i in range(energies.shape[0]):
+        for j in range(energies.shape[1]):
+            E = np.diag(energies[i,j]) * period
+            V = blochvectors[i,j]
+            exponent_matrix[i,j] = V @ E @ np.transpose(V)
+
+    # Finding the aplha values
+    alpha = np.zeros((energies.shape[0],energies.shape[1],9),dtype=float)
+    for i in range(exponent_matrix.shape[0]):
+        for j in range(exponent_matrix.shape[1]):
+            M = exponent_matrix[i,j]
+            alpha[i,j,0] = np.trace(M) / 3
+            alpha[i,j,1] = M[0,1]
+            alpha[i,j,2] = 0
+            alpha[i,j,3] = (M[0,0] - M[1,1]) / 2
+            alpha[i,j,4] = M[0,2]
+            alpha[i,j,5] = 0
+            alpha[i,j,6] = M[1,2]
+            alpha[i,j,7] = 0
+            alpha[i,j,8] = (M[2,2] - np.trace(M) / 3) * -3**0.5 / 2
+    
+    # Using a sin^2 for the connecting function
+    def hamiltonian(t):
+        H = np.zeros(blochvectors.shape)
+        for i in range(H.shape[0]):
+            for j in range(H.shape[1]):
+                for k in range(alpha.shape[2]):
+                    H[i,j] += np.real(alpha[i,j,k] * gell_mann()[k])
+        H = 2 / period * H * (np.sin(2*np.pi*t / period))**2
+        return H
+    
+    return hamiltonian
+
+def find_tunnelings(hamiltonian,
+                    n1,
+                    n2):
+    """Uses a discrete FT to find the tunnelings corresponding to some bloch
+    hamiltonian.
+    
+    Parameters
+    ----------
+    hamiltonian: function
+        Function of time returning a 4D array where hamiltonian(t)[i,j] is the
+        bloch hamiltonian at time t, at position i,j in k space. The
+        corresponding k vector is i*b1/N1 + j*b2/N2.
+    n1: int
+        The tunneling direction n1*a1 + n2*a2
+    n2: int
+        The tunneling direction n1*a1 + n2*a2
+
+    Returns
+    -------
+    J: function
+        A function of time where J(t) is the tunneling matrix for the specified
+        direction.
+    """
+    def J(t):
+        H = hamiltonian(t)
+        tunneling = np.zeros((3,3), dtype='complex')
+        for i in range(H.shape[0]):
+            for j in range(H.shape[1]):
+                tunneling += H[i,j] * np.exp(-2*np.pi*1j*(i / H.shape[0] * n1 
+                                                          +j / H.shape[1] * n2))
+        tunneling = tunneling / (H.shape[0] * H.shape[1])
+        return tunneling
+    
+    return J
+
+
