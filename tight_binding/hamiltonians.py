@@ -1,4 +1,4 @@
-"""This package contains defines Bloch hamiltonians for different lattices."""
+"""This package defines Bloch hamiltonians for different lattices."""
 
 
 # 01 IMPORTS

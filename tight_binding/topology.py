@@ -46,71 +46,25 @@ def gauge_fix_grid(blochvectors):
     blochvectors: numpy array
         An array with the gauge fixed blochvectors.
     """
+    blochvectors_gf = np.zeros(blochvectors.shape)
     for band in range(blochvectors.shape[3]):
-        gauge = 0
-        neighbours = 0
         for i in range(blochvectors.shape[0]):
             for j in range(blochvectors.shape[1]):
                 if i != 0:
-                    gauge += np.vdot(blochvectors[i-1,j,:,band],
-                                     blochvectors[i,j,:,band]) > 0
-                    neighbours += 1
-                if j != 0:
-                    gauge += np.vdot(blochvectors[i,j-1,:,band],
-                                     blochvectors[i,j,:,band]) > 0
-                    neighbours += 1
-                if i != blochvectors.shape[0] - 1:
-                    gauge += np.vdot(blochvectors[i+1,j,:,band],
-                                     blochvectors[i,j,:,band]) > 0
-                    neighbours += 1
-                if j != blochvectors.shape[1] - 1:
-                    gauge += np.vdot(blochvectors[i,j+1,:,band],
-                                     blochvectors[i,j,:,band]) > 0
-                    neighbours += 1
-
-        iterations = 0
-        while gauge / neighbours < 0.99 and iterations < 10000:
-            iterations += 1
-            i = np.random.randint(0,blochvectors.shape[0])
-            j = np.random.randint(0,blochvectors.shape[1])
-            point_gauge = 0
-            if i != 0:
-                point_gauge += np.vdot(blochvectors[i-1,j,:,band],
-                                blochvectors[i,j,:,band])
-            if j != 0:
-                point_gauge += np.vdot(blochvectors[i,j-1,:,band],
-                                blochvectors[i,j,:,band])
-            if i != blochvectors.shape[0] - 1:
-                point_gauge += np.vdot(blochvectors[i+1,j,:,band],
-                                blochvectors[i,j,:,band])
-            if j != blochvectors.shape[1] - 1:
-                point_gauge += np.vdot(blochvectors[i,j+1,:,band],
-                                blochvectors[i,j,:,band])
-            if point_gauge < 0:
-                blochvectors[i,j,:,band] = - blochvectors[i,j,:,band]
-            
-            if iterations % 1000 == 0:
-                gauge = 0
-                neighbours = 0
-                for i in range(blochvectors.shape[0]):
-                    for j in range(blochvectors.shape[1]):
-                        if i != 0:
-                            gauge += np.vdot(blochvectors[i-1,j,:,band],
-                                            blochvectors[i,j,:,band]) > 0
-                            neighbours += 1
-                        if j != 0:
-                            gauge += np.vdot(blochvectors[i,j-1,:,band],
-                                            blochvectors[i,j,:,band]) > 0
-                            neighbours += 1
-                        if i != blochvectors.shape[0] - 1:
-                            gauge += np.vdot(blochvectors[i+1,j,:,band],
-                                            blochvectors[i,j,:,band]) > 0
-                            neighbours += 1
-                        if j != blochvectors.shape[1] - 1:
-                            gauge += np.vdot(blochvectors[i,j+1,:,band],
-                                            blochvectors[i,j,:,band]) > 0
-                            neighbours += 1
-        return blochvectors
+                    if np.vdot(blochvectors_gf[i-1,j,:,band], 
+                               blochvectors[i,j,:,band]) < 0:
+                        blochvectors_gf[i,j,:,band] = - blochvectors[i,j,:,band]
+                    else:
+                        blochvectors_gf[i,j,:,band] = blochvectors[i,j,:,band]
+                elif j != 0:
+                    if np.vdot(blochvectors_gf[i,j-1,:,band], 
+                               blochvectors[i,j,:,band]) < 0:
+                        blochvectors_gf[i,j,:,band] = - blochvectors[i,j,:,band]
+                    else:
+                        blochvectors_gf[i,j,:,band] = blochvectors[i,j,:,band]
+                else:
+                    blochvectors_gf[i,j,:,band] = blochvectors[i,j,:,band]
+    return blochvectors_gf
 
 def compute_zak_phase(hamiltonian, 
                       a_1, 
@@ -204,7 +158,9 @@ def compute_zak_phase(hamiltonian,
             if i == 0:
                 ind = np.argsort(energies[i])
                 energies[i] = energies[i,ind]
-                blochvectors[i] = blochvectors[i][:,ind]
+                rows = np.array([0,1,2])
+                blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
+                                               ind[np.newaxis,:]]
             else:
                 ind = np.argsort(energies[i])
                 differences = np.zeros((3,), dtype='float')
@@ -220,12 +176,16 @@ def compute_zak_phase(hamiltonian,
                 minimum = np.argmin(differences)
                 ind = np.roll(ind, minimum)
                 energies[i] = energies[i,ind]
-                blochvectors[i] = blochvectors[i][:,ind]
+                rows = np.array([0,1,2])
+                blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
+                                               ind[np.newaxis,:]]
     elif regime == 'static':
         for i in range(energies.shape[0]):
             ind = np.argsort(energies[i])
             energies[i] = energies[i,ind]
-            blochvectors[i] = blochvectors[i][:,ind]
+            rows = np.array([0,1,2])
+            blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
+                                            ind[np.newaxis,:]]
 
     # Taking care of centre offsets
     blochvectors[-1] = np.matmul(offset_matrix, blochvectors[0])
@@ -349,7 +309,52 @@ def locate_dirac_strings(hamiltonian,
     plt.savefig(save)
     plt.close()
 
-def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_points,omega,num_steps,lowest_quasi_energy,method,regime):
+def compute_patch_euler_class(kxmin,
+                              kxmax,
+                              kymin,
+                              kymax,
+                              bands,
+                              hamiltonian,
+                              num_points=100,
+                              omega=0,
+                              num_steps=100,
+                              lowest_quasi_energy=-np.pi,
+                              method='trotter',
+                              regime='driven',
+                              divergence_threshold=5):
+    """Calculates a patch euler class over a square patch.
+    
+    Parameters
+    ----------
+    kxmin: float
+        The left boundary of the patch
+    kxmax: float
+        The right boundary of the patch
+    kymin: float
+        The bottom boundary of the patch
+    kymax: float
+        The top boundary of the patch
+    bands: numpy.array
+        The two bands over which to calculate the Euler class
+    hamiltonian: function
+        The bloch hamiltonian
+    num_points: int
+        The number of points along the path to evaluate the blochvectors at
+    omega: float
+        The angular frequency of the bloch hamiltonian in case of a driven 
+        system
+    num_steps: int
+        The number of steps to use in the calculation of the time evolution
+    lowest_quasi_energy: float
+        The lower bound of the 2pi interval in which to give the quasi energies
+    method: str
+        The method for calculating the time evolution: trotter or Runge-Kutta
+    regime: str
+        'driven' or 'static'
+    divergence_threshold: float
+        There will be divergent terms in the Euler curvature and Berry 
+        connections, terms above this threshold will be removed
+    """
     a_1 = np.array([1,0])
     a_2 = np.array([0,1])
     kx = np.linspace(kxmin,kxmax,num_points)
@@ -386,7 +391,48 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
     energy_grid, blochvector_grid = sort_energy_grid(energy_grid, 
                                                      blochvector_grid, regime)
     
-    plot_bandstructure2D(energy_grid, a_1, a_2, 'test.png')
+    # Plotting energies
+    E = energy_grid
+    if regime == 'driven':
+        top = lowest_quasi_energy + 2 * np.pi
+        bottom = lowest_quasi_energy
+        for band in range(E.shape[0]):
+            distance_to_top = np.abs(E[band] - top)
+            distance_to_bottom = np.abs(E[band] - bottom)
+            
+            threshold = 0.05 * 2 * np.pi
+            discontinuity_mask = distance_to_top < threshold
+            E[band] = np.where(discontinuity_mask, np.nan, E[band])
+            discontinuity_mask = distance_to_bottom < threshold
+            E[band] = np.where(discontinuity_mask, np.nan, E[band])
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf1 = ax.plot_surface(kx, ky, E[...,0], cmap=cm.YlGnBu,
+                                linewidth=0)
+    surf2 = ax.plot_surface(kx, ky, E[...,1], cmap=cm.PuRd,
+                                linewidth=0)
+    surf3 = ax.plot_surface(kx, ky, E[...,2], cmap=cm.YlOrRd,
+                                linewidth=0)
+    tick_values = np.linspace(-4,4,9) * np.pi / 2
+    tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
+    ax.set_xticks(tick_values)
+    ax.set_xticklabels(tick_labels)
+    ax.set_yticks(tick_values)
+    ax.set_yticklabels(tick_labels)
+    if regime == 'driven':
+        ztick_labels = ['$-2\pi$', '$-3\pi/2$', '$-\pi$', '$-\pi/2$', '0', 
+                        '$\pi/2$', '$\pi$', '$3\pi/2$', '$2\pi$']
+        ax.set_zticks(tick_values)
+        ax.set_zticklabels(ztick_labels)
+    ax.set_zlim(np.nanmin(E),np.nanmax(E))
+    ax.set_xlim(kxmin,kxmax)
+    ax.set_ylim(kymin,kymax)
+    ax.set_xlabel('$k_x$')
+    ax.set_ylabel('$k_y$')
+    ax.grid(False)
+    ax.set_box_aspect([1, 1, 2])
+    plt.show()
+    plt.close()
     
     # gauge fixing
     blochvector_grid = gauge_fix_grid(blochvector_grid)
@@ -401,7 +447,7 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
     for i in range(yder.shape[0]):
         for j in range(yder.shape[1]):
             yder[i,j] = (blochvector_grid[i,j+1] - blochvector_grid[i,j]) / dky
-    
+
     # calculating Euler curvature at each point
     Eu = np.zeros((num_points,num_points), dtype='float')
     for i in range(Eu.shape[0]):
@@ -409,22 +455,40 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
             Eu[i,j] = (np.vdot(xder[i,j,:,bands[0]],yder[i,j,:,bands[1]])
                     - np.vdot(yder[i,j,:,bands[0]],xder[i,j,:,bands[1]]))
     
-    # Gauge fixing is not perfect so there might be divergent terms
-    # trying to get rid of them:
+    # There will diverging derivative across Dirac strings: trying to remove them
     for i in range(Eu.shape[0]):
         for j in range(Eu.shape[1]):
-            if np.abs(Eu[i,j]) > 5:
+            if np.abs(Eu[i,j]) > divergence_threshold:
                 if j != 0:
                     Eu[i,j] = Eu[i,j-1]
                 elif i != 0:
                     Eu[i,j] = Eu[i-1,j]
                 else:
                     shift = 0
-                    while np.abs(Eu[i,j]) > 5 and shift < 10:
+                    while np.abs(Eu[i,j]) > divergence_threshold and shift < 10:
                         shift += 1
                         Eu[i,j] = Eu[i + shift,j]
-                    if np.abs(Eu[i,j]) > 5:
+                if np.abs(Eu[i,j]) > divergence_threshold:
                         Eu[i,j] = 0
+
+    # Plotting Euler Curvature
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf1 = ax.plot_surface(kx[:-1,:-1], ky[:-1,:-1], Eu, cmap=cm.YlGnBu,
+                                linewidth=0)
+    tick_values = np.linspace(-4,4,9) * np.pi / 2
+    tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
+    ax.set_xticks(tick_values)
+    ax.set_xticklabels(tick_labels)
+    ax.set_yticks(tick_values)
+    ax.set_yticklabels(tick_labels)
+    ax.set_xlim(kxmin,kxmax)
+    ax.set_ylim(kymin,kymax)
+    ax.set_xlabel('$k_x$')
+    ax.set_ylabel('$k_y$')
+    ax.grid(False)
+    ax.set_box_aspect([1, 1, 2])
+    plt.show()
+    plt.close()
 
     # Doing y integrals
     integ_x = np.zeros(Eu.shape[0])
@@ -448,16 +512,124 @@ def compute_patch_euler_class(kxmin,kxmax,kymin,kymax,bands,hamiltonian,num_poin
         left[i] = - np.vdot(blochvector_grid[-2-i,-2,:,bands[0]],xder[-1-i,-1,:,bands[1]])
         down[i] = - np.vdot(blochvector_grid[0,-2-i,:,bands[0]],yder[0,-1-i,:,bands[1]])
     
+    # Removing divergences here as well
+    for i in range(len(right)):
+        if np.abs(right[i]) > 5:
+            if i != 0:
+                right[i] = right[i-1]
+            else:
+                right[i] = right[i+5]
+            if np.abs(right[i]) > 5:
+                right[i] = 0
+    for i in range(len(up)):
+        if np.abs(up[i]) > 5:
+            if i != 0:
+                up[i] = up[i-1]
+            else:
+                up[i] = up[i+5]
+            if np.abs(up[i]) > 5:
+                up[i] = 0
+    for i in range(len(left)):
+        if np.abs(left[i]) > 5:
+            if i != 0:
+                left[i] = left[i-1]
+            else:
+                left[i] = left[i+5]
+            if np.abs(left[i]) > 5:
+                left[i] = 0
+    for i in range(len(down)):
+        if np.abs(down[i]) > 5:
+            if i != 0:
+                down[i] = down[i-1]
+            else:
+                down[i] = down[i+5]
+            if np.abs(down[i]) > 5:
+                down[i] = 0
+    
     right = np.sum(right[1:] + right[:num_points-1]) / 2 * dkx
     up = np.sum(up[1:] + up[:num_points-1]) / 2 * dky
     left = np.sum(left[1:] + left[:num_points-1]) / 2 * dkx
     down = np.sum(down[1:] + down[:num_points-1]) / 2 * dky
+
     boundary_term = 1 / (2*np.pi) * (right + up + left + down)
 
-    print(surface_term)
-    print(boundary_term)
+    print('Surface Term:  ', surface_term)
+    print('Boundary Term: ', boundary_term)
     chi = (surface_term - boundary_term)
 
     return chi
     
+def impose_zak_phases_square(gamma_1_axis, 
+                             gamma_1_angle,
+                             gamma_2_axis,
+                             gamma_2_angle,
+                             V_0=np.identity(3),
+                             num_points=100):
+    """Constructs a blochvector structure for given zak_phases
+    
+    Parameters
+    ----------
+    gamma_1_axis: int
+        The axis about which to rotate the blochvector dreibein along paths
+        parallel to b1.
+    gamma_1_angle: int
+        The multiple of pi to rotate the blochvector dreibein by along paths
+        parallel to b1.
+    gamma_1_axis: int
+        The axis about which to rotate the blochvector dreibein along paths
+        parallel to b2.
+    gamma_1_angle: int
+        The multiple of pi to rotate the blochvector dreibein by along paths
+        parallel to b1.
+    V_0: 2D array
+        The blochvectors at the origin.
+    num_points: int
+        The number of k points along each direction.
 
+    Returns
+    -------
+    blochvectors: 4D array
+        An array of shape (num_points,num_points,3,3), where
+        blochvectors[i,j,:,k] is the blochvector for the band k at the point
+        k = i / num_points * b1 + j / num_points * b2.
+    """
+    blochvectors = np.zeros((num_points,num_points,3,3)).astype('float')
+    blochvectors[0,0] = V_0
+
+    def R(phi,n):
+        if n[0]**2 + n[1]**2 <= 1e-5:
+                e0 = np.array([1,0,0])
+                e1 = np.array([0,n[2],0])
+                e2 = n
+        else:
+            e0 = np.array([-n[1],n[0],0]) / (n[0]**2+n[1]**2)**0.5
+            e1 = (np.array([-n[0]*n[2],-n[1]*n[2],n[0]**2 + n[1]**2]) 
+                  / (n[0]**2 + n[1]**2)**0.5)
+            e2 = n
+        S = np.zeros((3,3)).astype('float')
+        S[:,0] = e0
+        S[:,1] = e1
+        S[:,2] = e2
+        rot_z = np.array([
+            [np.cos(phi),-np.sin(phi),0],
+            [np.sin(phi),np.cos(phi),0],
+            [0,0,1]
+        ])
+        rot = S @ rot_z @ np.transpose(S)
+        return rot
+    
+    # zak phase along b1
+    n = V_0[:,gamma_1_axis]
+    for i in range(blochvectors.shape[0]):
+        blochvectors[i,0] = R(gamma_1_angle*np.pi*i/num_points,n) @ V_0
+    
+    # zak phases along b2
+    for i in range(blochvectors.shape[0]):
+        n = blochvectors[i,0,:,gamma_2_axis]
+        for j in range(blochvectors.shape[1]):
+            blochvectors[i,j] = (R(gamma_2_angle*np.pi*j/num_points,n)
+                                 @ blochvectors[i,0])
+            
+    return blochvectors
+            
+    
