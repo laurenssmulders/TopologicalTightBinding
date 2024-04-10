@@ -4,6 +4,7 @@
 # 01 IMPORTS
 
 import numpy as np
+from tight_binding.utilities import gell_mann
 
 # 02 EQUILLIBRIUM HAMILTONIANS
 
@@ -493,7 +494,7 @@ def square_hamiltonian_driven(delta_a=0,
            [J_aa_2m, J_ab_2m, J_ac_2m],
            [J_ba_2m, J_bb_2m, J_bc_2m],
            [J_ca_2m, J_cb_2m, J_cc_2m]
-       ]) * -2 * np.cos(np.vdot((k+A(t)),a_1 + a_2))
+       ]) * -2 * np.cos(np.vdot((k+A(t)),a_1 - a_2))
        
        hamiltonian = (H_offsets + H_onsite + H_horizontal + H_vertical 
                       + H_diagonal_p + H_diagonal_m)
@@ -970,3 +971,123 @@ def square_hamiltonian_driven_finite_x(
         return hamiltonian
     
     return H
+
+def square_hamiltonian_driven_compact(J,
+                              n1,
+                              n2,
+                              m,
+                              num_points,
+                              num_steps):
+    """Finds the bloch hamiltonian corresponding to given hoppings and drive.
+    
+    Parameters
+    ----------
+    J: function
+        The hoppings such that J[i,j,m] is the hopping matrix for the direction
+        n1[i,j]*a1 + n2[i,j]*a2 and fourier component exp(imwt)
+    n1: 2D array
+    n2: 2D array
+    m: 1D array
+
+    Returns
+    -------
+    H: 5D array
+        The bloch hamiltonian where H[t,i,j] is the bloch hamiltonian at time
+        T / num_steps * t and position i / num_points * b1 + j / num_points * b2
+    """
+    hamiltonian = np.zeros((num_steps,num_points,num_points,3,3), dtype='complex')
+    t = np.linspace(0,1,num_steps)
+    k1 = np.linspace(0,1,num_points)
+    k2 = np.linspace(0,1,num_points)
+
+    t = t[:,np.newaxis,np.newaxis,np.newaxis,np.newaxis]
+    k1 = k1[np.newaxis,:,np.newaxis,np.newaxis,np.newaxis]
+    k2 = k2[np.newaxis,np.newaxis,:,np.newaxis,np.newaxis]
+
+    t = np.repeat(t,num_points,1)
+    t = np.repeat(t,num_points,2)
+    t = np.repeat(t,3,3)
+    t = np.repeat(t,3,4)
+
+    k1 = np.repeat(k1,num_steps,0)
+    k1 = np.repeat(k1,num_points,2)
+    k1 = np.repeat(k1,3,3)
+    k1 = np.repeat(k1,3,4)
+
+    k2 = np.repeat(k2,num_steps,0)
+    k2 = np.repeat(k2,num_points,1)
+    k2 = np.repeat(k2,3,3)
+    k2 = np.repeat(k2,3,4)
+
+    for k in range(len(n1)):
+        for l in range(len(n2)):
+            for p in range(len(m)):
+                J = J[k,l,p][np.newaxis,np.newaxis,np.newaxis,:,:]
+                J = np.repeat(J,num_steps,0)
+                J = np.repeat(J,num_points,1)
+                J = np.repeat(J,num_points,2)
+                exponent = np.exp(1j*2*np.pi*(m[p]*t+n1[k]*k1+n2[l]*k2))
+                hamiltonian += J * exponent
+    return hamiltonian
+
+def square_hamiltonian_finite_geometry_compact(J,
+                                                n1,
+                                                n2,
+                                                L=10,
+                                                omega=0, 
+                                                phi=0,
+                                                a=1):
+    """Returns two hamiltonians for finite geometries on for each cut direction.
+    
+    Parameters
+    ----------
+    J: function
+        The hoppings such that J(t)[i,j] is the hopping matrix for the direction
+        n1[i,j]*a1 + n2[i,j]*a2
+    n1: 2D array
+    n2: 2D array
+    L: int
+        The number of layers to consider.
+    omega: float
+        The angular frequency of the driving vector potential
+    phi:
+        The relative phase of the phi component of the vector potential
+    a: float
+        The lattice spacing
+
+    Returns
+    -------
+    H_1: function
+        The bloch hamiltonian for the cut along the a1 direction
+    H_2: function
+        The bloch hamiltonian for the cut along the a2 direction
+    """
+    a1 = a*np.array([1,0])
+    a2 = a*np.array([0,1])
+
+
+    # Cut along a1
+    def H_1(k,t):
+        hamiltonian = np.zeros((3*L,3*L), dtype='complex')
+        for m2 in range(L):
+            for j in range(n2.shape[1]):
+                if m2 + n2[0,j] >= 0 and m2 + n2[0,j] < L:
+                    for i in range(n1.shape[0]):
+                        hamiltonian[3*(m2+n2[0,j]):3*(m2+n2[0,j])+3,
+                                    3*m2:3*m2+3] += J(t)[i,j]*np.exp(
+                            1j*(n1[i,j]*k*np.linalg.norm(a1)))
+        return hamiltonian
+    
+    # Cut along a2
+    def H_2(k,t):
+        hamiltonian = np.zeros((3*L,3*L), dtype='complex')
+        for m1 in range(L):
+            for i in range(n1.shape[1]):
+                if m1 + n1[i,0] >= 0 and m1 + n1[i,0] < L:
+                    for j in range(n2.shape[0]):
+                        hamiltonian[3*(m1+n1[i,0]):3*(m1+n1[i,0])+3,
+                                    3*m1:3*m1+3] += J(t)[i,j]*np.exp(
+                            1j*(n2[i,j]*k*np.linalg.norm(a2)))
+        return hamiltonian
+    
+    return H_1, H_2

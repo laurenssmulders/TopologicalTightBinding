@@ -7,7 +7,7 @@ import scipy.linalg as la
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from .diagonalise import compute_eigenstates
-from .utilitities import compute_reciprocal_lattice_vectors_2D, gell_mann
+from .utilities import compute_reciprocal_lattice_vectors_2D, gell_mann
 from .bandstructure import sort_energy_grid, plot_bandstructure2D
 
 def gauge_fix_path(blochvectors):
@@ -179,6 +179,7 @@ def compute_zak_phase(hamiltonian,
                 rows = np.array([0,1,2])
                 blochvectors[i] = blochvectors[i,rows[:,np.newaxis],
                                                ind[np.newaxis,:]]
+            
     elif regime == 'static':
         for i in range(energies.shape[0]):
             ind = np.argsort(energies[i])
@@ -632,97 +633,99 @@ def impose_zak_phases_square(gamma_1_axis,
             
     return blochvectors
 
-def find_bloch_hamiltonian(energies,
-                           blochvectors,
-                           period):
-    """Defines the time evolution operator throughout the Brillouin zone after
-    one period.
+def find_tunnelings(energies,
+                    blochvectors,
+                    N_max,
+                    period,
+                    a1,
+                    a2,
+                    Ax,
+                    Ay,
+                    n_steps):
+    """Fits a tight binding model to a given floquet bandstructure.
     
     Parameters
     ----------
     energies: 3D array
-        Array of shape (n,n,3) where energies[i,j,k] is the quasienergy of band
-        k at position i,j.
+        Array of shape (n,n,3) where energies[i,j,k] is the quasi energy of band
+        k at position i/n*b1 + j/n*b2. With b1 and b2 the reciprocal lattice
+        vectors.
     blochvectors: 4D array
         Array of shape (n,n,3,3) where blochvectors[i,j,:,k] is the blochvector
-        of band k at position i,j.
+        of band k at position i/n*b1 + j/n*b2. With b1 and b2 the reciprocal 
+        lattice vectors.
+    N_max: int
+        The tunnelings J(n1,n2) are evaluated up to -N_max <= n1,n2 <= N_max
     period: float
-        The periodicity of the corresponding desired hamiltonian.
-    
-    Returns
-    -------
-    hamiltonian: function
-        A function of time returning a 4D array, where hamiltonian(t)[i,j] is
-        the bloch hamiltonian at position i,j at time t.
-    """
-    # Calculating H in U=exp(iH)
-    exponent_matrix = np.zeros(blochvectors.shape, dtype=float)
-    for i in range(energies.shape[0]):
-        for j in range(energies.shape[1]):
-            E = np.diag(energies[i,j]) * period
-            V = blochvectors[i,j]
-            exponent_matrix[i,j] = V @ E @ np.transpose(V)
-
-    # Finding the aplha values
-    alpha = np.zeros((energies.shape[0],energies.shape[1],9),dtype=float)
-    for i in range(exponent_matrix.shape[0]):
-        for j in range(exponent_matrix.shape[1]):
-            M = exponent_matrix[i,j]
-            alpha[i,j,0] = np.trace(M) / 3
-            alpha[i,j,1] = M[0,1]
-            alpha[i,j,2] = 0
-            alpha[i,j,3] = (M[0,0] - M[1,1]) / 2
-            alpha[i,j,4] = M[0,2]
-            alpha[i,j,5] = 0
-            alpha[i,j,6] = M[1,2]
-            alpha[i,j,7] = 0
-            alpha[i,j,8] = (M[2,2] - np.trace(M) / 3) * -3**0.5 / 2
-    
-    # Using a sin^2 for the connecting function
-    def hamiltonian(t):
-        H = np.zeros(blochvectors.shape)
-        for i in range(H.shape[0]):
-            for j in range(H.shape[1]):
-                for k in range(alpha.shape[2]):
-                    H[i,j] += np.real(alpha[i,j,k] * gell_mann()[k])
-        H = 2 / period * H * (np.sin(2*np.pi*t / period))**2
-        return H
-    
-    return hamiltonian
-
-def find_tunnelings(hamiltonian,
-                    n1,
-                    n2):
-    """Uses a discrete FT to find the tunnelings corresponding to some bloch
-    hamiltonian.
-    
-    Parameters
-    ----------
-    hamiltonian: function
-        Function of time returning a 4D array where hamiltonian(t)[i,j] is the
-        bloch hamiltonian at time t, at position i,j in k space. The
-        corresponding k vector is i*b1/N1 + j*b2/N2.
-    n1: int
-        The tunneling direction n1*a1 + n2*a2
-    n2: int
-        The tunneling direction n1*a1 + n2*a2
+        The period of the drive.
+    a1: 1D array
+        The first lattice vector.
+    a2: 1D array
+        The second lattice vector.
+    Ax: float
+        The x amplitude of the driving.
+    Ay: float
+        The y amplitude of the driving.
+    n_steps: int
+        The number of time steps for evaluation of the time integral.
 
     Returns
     -------
-    J: function
-        A function of time where J(t) is the tunneling matrix for the specified
-        direction.
+    J: 4D array
+        The tunnelings for the model such that J[i,j] is the n1[i,j],n2[i,j] 
+        hopping matrix.
+    n1: 2D array
+    n2: 2D array
     """
-    def J(t):
-        H = hamiltonian(t)
-        tunneling = np.zeros((3,3), dtype='complex')
-        for i in range(H.shape[0]):
-            for j in range(H.shape[1]):
-                tunneling += H[i,j] * np.exp(-2*np.pi*1j*(i / H.shape[0] * n1 
-                                                          +j / H.shape[1] * n2))
-        tunneling = tunneling / (H.shape[0] * H.shape[1])
-        return tunneling
+    n_points = energies.shape[0]
+    # Defining S(k)
+    S = np.zeros((n_points,n_points,3,3), dtype='float')
+    for i in range(n_points):
+        for j in range(n_points):
+            S[i,j] = (-period*blochvectors[i,j]
+                      @np.diag(energies[i,j])
+                      @np.transpose(blochvectors[i,j]))
+        
     
-    return J
+    # Defining the drive A(t)
+    def A(t):
+        return np.array([Ax,-Ay])*np.cos(2*np.pi*t/period)
+    
+    J = np.zeros((2*N_max+1,2*N_max+1,3,3), dtype='complex')
+    n = np.linspace(-N_max, N_max, 2*N_max+1, dtype='int')
+    n1, n2 = np.meshgrid(n,n,indexing='ij')
+
+    for i in range(len(n)):
+        for j in range(len(n)):
+
+            # Calculating the static factor
+            integrand = np.zeros(S.shape, dtype='complex')
+            for l in range(n_points):
+                for m in range(n_points):
+                    k1 = l / n_points
+                    k2 = m / n_points
+                    integrand[l,m] = S[l,m] * np.exp(-2*np.pi*1j
+                                                     *(n1[i,j]*k1+n2[i,j]*k2))
+
+            dk = 1 / n_points
+            static_factor = np.sum(integrand,(0,1))*dk**2
+
+            # Calculating the floquet factor
+            t = np.linspace(0,period,n_steps+1)
+            dt = period / n_steps
+            floquet_factor = 0j
+            for m in range(n_steps):
+                floquet_factor += (
+                    np.exp(1j*np.vdot(A(t[m]),n1[i,j]*a1+n2[i,j]*a2)) 
+                    + np.exp(1j*np.vdot(A(t[m+1]),n1[i,j]*a1+n2[i,j]*a2))) /2*dt
+            
+            J[i,j] = static_factor / floquet_factor
+        
+    return J, n1, n2
+            
+
+
+
+
 
 

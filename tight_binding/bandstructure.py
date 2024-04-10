@@ -5,7 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from .diagonalise import compute_eigenstates
-from .utilitities import compute_reciprocal_lattice_vectors_2D
+from .utilities import compute_reciprocal_lattice_vectors_2D
+import scipy.linalg as la
 
 def sort_energy_path(energies, blochvectors, 
                      regime='driven'):
@@ -225,6 +226,75 @@ def compute_bandstructure2D(hamiltonian,
                                                             regime)
 
     return energies_sorted, blochvectors_sorted
+
+def compute_bandstructure2D_grid(hamiltonian,
+                                 omega=0,
+                                 lowest_quasi_energy=-np.pi,
+                                 enforce_real=True):
+    """Computes Floquet bandstructure.
+    
+    Parameters
+    ----------
+    hamiltonian: 5D array
+        Array where hamiltonian[t,i,j] is the bloch hamiltonian at position i,j
+        and time t.
+    lowest_quasi_energy: float
+        The lower bound for the quasi energies
+    enforce_real: bool
+        Whether to ensure that blochvectors are real
+        
+    Returns
+    -------
+    energies: 3D array
+    blochvectors: 4D array
+    """
+    num_points = hamiltonian.shape[1]
+    num_steps = hamiltonian.shape[0]
+    T = 2*np.pi/omega
+    # Calculating the time evolution operator
+    print('Calculating the time evolution operator...')
+    U = np.zeros((num_points,num_points,3,3), dtype='complex')
+    for i in range(num_points):
+        for j in range(num_points):
+            U[i,j] = np.identity(3)
+    dt = T / num_steps
+    for step in range(num_steps):
+        U = np.matmul(la.expm(-1j*hamiltonian[step]*dt),U)
+
+    # checking unitarity
+    identity = np.zeros((num_points,num_points,3,3), dtype='complex')
+    for i in range(num_points):
+        for j in range(num_points):
+            identity[i,j] = np.identity(3)
+    error = np.sum(np.matmul(U,np.conjugate(np.transpose(U,(0,1,3,2)))) - identity) / num_points**2
+    if error > 1e-5:
+        print('High normalisation error!: {error}'.format(error=error))
+
+    # diagonalising
+    print('Diagonalising...')
+    eigenvalues, eigenvectors = np.linalg.eig(U)
+    energies = np.real(np.log(eigenvalues) / (-1j))
+    errors = np.real(np.log(eigenvalues)) / num_points**2 #checking for real eigenenergies
+    if np.sum(errors) > 1e-5:
+        print('Imaginary quasienergies!')
+
+    # getting the energies in the right range
+    energies = (energies + 2*np.pi*np.floor((lowest_quasi_energy-energies) 
+                                                    / (2*np.pi) + 1))
+    blochvectors = eigenvectors
+
+    # enforcing real blochvectors
+    for i in range(num_points):
+        for j in range(num_points):
+            for k in range(3):
+                phi = 0.5*np.imag(np.log(np.inner(blochvectors[i,j,:,k], 
+                                                blochvectors[i,j,:,k])))
+                blochvectors[i,j,:,k] = np.real(blochvectors[i,j,:,k] * np.exp(-1j*phi))
+                blochvectors = np.real(blochvectors)
+    
+    # sorting the energies and vectors
+    energies, blochvectors = sort_energy_grid(energies, blochvectors)
+    return energies, blochvectors
 
 def plot_bandstructure2D(energy_grid,
                          a_1,
@@ -468,6 +538,121 @@ def locate_nodes(energy_grid,
         plt.show()
     plt.close()
 
+def compute_finite_geometry_bandstructure2D(hamiltonian, 
+                            a_1, 
+                            a_2,
+                            cut,
+                            num_points, 
+                            omega=0, 
+                            num_steps=0, 
+                            lowest_quasi_energy=-np.pi,
+                            enforce_real=True,
+                            method='trotter', 
+                            regime='driven'):
+    """Computes the bandstructure for a given bloch hamiltonian.
+    
+    Parameters
+    ----------
+    hamiltonian: function
+        The bloch hamiltonian for which to calculate the bandstructure
+    a_1: numpy.ndarray
+        The first eigenvector
+    a_2: numpy.ndarray
+        The second eigenvector
+    cut: int
+        The lattice vector along which to cut, 0 or 1
+    num_points: int
+        The number of points on the grid for which to calculate the eigenstates 
+        along each reciprocal lattice direction
+    omega: float
+        The angular frequency of the bloch hamiltonian in case of a driven 
+        system
+    num_steps: int
+        The number of steps to use in the calculation of the time evolution
+    lowest_quasi_energy: float
+        The lower bound of the 2pi interval in which to give the quasi energies
+    method: str
+        The method for calculating the time evolution: trotter or Runge-Kutta
+    regime: str
+        'driven' or 'static'
 
+    Returns
+    -------
+    energy_grid: numpy.ndarray
+        A 2D array with the energies at each point. energy_grid[i] is an array
+        of the energies at k = i / num_points * b1 or j / num_points * b2,
+        depending on the cut direction.
+    blochvector_grid: numpy.ndarray
+        A 3D array with the blochvectors at each point. blochvector_grid[i] is 
+        an array of the blochvectors at 
+        k = i / num_points * b1 or j / num_points * b2
+    """
+    L = hamiltonian(0,0).shape[0] // 3
+    b = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
+    k = np.linspace(-0.5*np.linalg.norm(b[cut]), 0.5*np.linalg.norm(b[cut]), num_points)
+    E = np.zeros((num_points, 3*L), dtype='float')
+    blochvectors = np.zeros((num_points, 3*L, 3*L), dtype='complex')
+
+    for i in range(len(k)):
+        energies, eigenvectors = compute_eigenstates(hamiltonian,k[i],omega,num_steps,
+                                                    lowest_quasi_energy,False,method='Runge-Kutta')
+        E[i] = energies
+        blochvectors[i] = eigenvectors
+
+    E, blochvectors = sort_energy_path(E,blochvectors)
+
+    return E, blochvectors
+
+def plot_finite_geometry_bandstructure2D(energies,
+                         a_1,
+                         a_2,
+                         cut,
+                         save, 
+                         lowest_quasi_energy=-np.pi,
+                         regime='driven',
+                         show_plot=True):
+    """Plots the bandstructure calculated from compute_bandstructure2D for 3 
+    band systems
+    
+    Parameters
+    ----------
+    energies: numpy.ndarray
+        The energies to plot
+    a_1: numpy.ndarray
+        The first lattice vector
+    a_2: numpy.ndarray
+        The second lattice vector
+    cut: int
+        The lattice vector along which the cut is made. 0 or 1.
+    save: str
+        The place to save the plot
+    lowest_quasi_energy: float
+        The bottom of the FBZ
+    regime: str
+        'driven'or 'static' (only driven implemented)
+    show_plot: bool
+        Whether to show the plot
+    """
+    # ONLY FOR DRIVEN REGIME
+    b = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
+    num_points = energies.shape[0]
+    k = np.linspace(-0.5*np.linalg.norm(b[cut]), 0.5*np.linalg.norm(b[cut]), 
+                    num_points)
+    plt.plot(k,energies,c='0')
+    plt.ylabel('$2\pi E / \omega$')
+    plt.yticks([-2*np.pi, -3/2*np.pi, -np.pi, -1/2*np.pi, 0, 1/2*np.pi, np.pi, 
+                3/2*np.pi, 2*np.pi], ['$-2\pi$','$-3/2\pi$','$-\pi$','$-1/2\pi$',
+                                    '$0$','$1/2\pi$','$\pi$','$3/2\pi$','$2\pi$'])
+    if cut == 1:
+        plt.xlabel('$k_y$')
+    elif cut == 0:
+        plt.xlabel('$k_x$')
+    plt.xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','','0','','$\pi$'])
+    plt.xlim(-0.5*np.linalg.norm(b[cut]), 0.5*np.linalg.norm(b[cut]))
+    plt.ylim(lowest_quasi_energy, lowest_quasi_energy + 2*np.pi)
+    plt.savefig(save)
+    if show_plot:
+        plt.show()
+    plt.close()
 
     
