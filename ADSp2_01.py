@@ -148,6 +148,15 @@ for i in range(2*N+1):
         J4A[i,j] = -np.sum(integrand4A,(0,1)) * dk**2
         J4B[i,j] = -np.sum(integrand4B,(0,1)) * dk**2
 
+np.save('hoppings/J1A.npy',J1A)
+np.save('hoppings/J1B.npy',J1B)
+np.save('hoppings/J2A.npy',J2A)
+np.save('hoppings/J2B.npy',J2B)
+np.save('hoppings/J3A.npy',J3A)
+np.save('hoppings/J3B.npy',J3B)
+np.save('hoppings/J4A.npy',J4A)
+np.save('hoppings/J4B.npy',J4B)
+
 def J(t):
     if (t%T) < T/4:
         hoppings = J1A + J1B * 8*t/T
@@ -320,7 +329,7 @@ if error2 > 1e-5:
 print('Diagonalising the finite time evolution operators...')
 eigenvalues1, blochvectors1 = np.linalg.eig(U1)
 eigenvalues2, blochvectors2 = np.linalg.eig(U2)
-
+print(eigenvalues1.shape)
 energies1 = np.real(1j*np.log(eigenvalues1))
 energies1 = (energies1 + 2*np.pi*np.floor((lowest_quasi_energy-energies1) 
                                                 / (2*np.pi) + 1))
@@ -349,31 +358,31 @@ energies2, blochvectors2 = sort_energy_path(energies2,blochvectors2)
 print('Plotting the finite structures...')
 b1, b2 = compute_reciprocal_lattice_vectors_2D(a1, a2)
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,15))
-k1 = np.linspace(-0.5*np.linalg.norm(b1), 0.5*np.linalg.norm(b1), 
-                num_points)
-k2 = np.linspace(-0.5*np.linalg.norm(b2), 0.5*np.linalg.norm(b2), 
-                num_points)
+k1 = np.linspace(0,np.linalg.norm(b1), 
+                num_points,False)
+k2 = np.linspace(0,np.linalg.norm(b2), 
+                num_points,False)
 
 top = lowest_quasi_energy + 2 * np.pi
 bottom = lowest_quasi_energy
 for band in range(3*L):
-    distance_to_top1 = np.abs(energies1[band] - top)
-    distance_to_bottom1 = np.abs(energies1[band] - bottom)
+    distance_to_top1 = np.abs(energies1[:,band] - top)
+    distance_to_bottom1 = np.abs(energies1[:,band] - bottom)
     
     threshold = 0.005 * 2 * np.pi
     discontinuity_mask1 = distance_to_top1 < threshold
-    energies1[band] = np.where(discontinuity_mask1, np.nan, energies1[band])
+    energies1[:,band] = np.where(discontinuity_mask1, np.nan, energies1[:,band])
     discontinuity_mask1 = distance_to_bottom1 < threshold
-    energies1[band] = np.where(discontinuity_mask1, np.nan, energies1[band])
+    energies1[:,band] = np.where(discontinuity_mask1, np.nan, energies1[:,band])
 
-    distance_to_top2 = np.abs(energies2[band] - top)
-    distance_to_bottom2 = np.abs(energies2[band] - bottom)
+    distance_to_top2 = np.abs(energies2[:,band] - top)
+    distance_to_bottom2 = np.abs(energies2[:,band] - bottom)
     
     threshold = 0.005 * 2 * np.pi
     discontinuity_mask2 = distance_to_top2 < threshold
-    energies2[band] = np.where(discontinuity_mask2, np.nan, energies2[band])
+    energies2[:,band] = np.where(discontinuity_mask2, np.nan, energies2[:,band])
     discontinuity_mask2 = distance_to_bottom2 < threshold
-    energies2[band] = np.where(discontinuity_mask2, np.nan, energies2[band])
+    energies2[:,band] = np.where(discontinuity_mask2, np.nan, energies2[:,band])
 
 ax1.plot(k1,energies1,c='0')
 ax2.plot(k2,energies2,c='0')
@@ -387,16 +396,77 @@ ax2.set_yticks([-2*np.pi, -3/2*np.pi, -np.pi, -1/2*np.pi, 0, 1/2*np.pi, np.pi,
                                 '$0$','$1/2\pi$','$\pi$','$3/2\pi$','$2\pi$'])
 ax1.set_xlabel = 'k_x'
 ax2.set_xlabel = 'k_y'
-ax1.set_xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','','0','','$\pi$'])
-ax2.set_xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi], ['$-\pi$','','0','','$\pi$'])
-ax1.set_xlim(-0.5*np.linalg.norm(b1), 0.5*np.linalg.norm(b1))
-ax2.set_xlim(-0.5*np.linalg.norm(b2), 0.5*np.linalg.norm(b2))
+ax1.set_xticks([0, np.pi/2, np.pi, 3*np.pi/2, 2*np.pi], ['0','','$\pi$','','$2\pi$'])
+ax2.set_xticks([0, np.pi/2, np.pi, 3*np.pi/2, 2*np.pi], ['0','','$\pi$','','$2\pi$'])
+ax1.set_xlim(0,np.linalg.norm(b1))
+ax2.set_xlim(0,np.linalg.norm(b2))
 ax1.set_ylim(lowest_quasi_energy, lowest_quasi_energy + 2*np.pi)
 ax2.set_ylim(lowest_quasi_energy, lowest_quasi_energy + 2*np.pi)
 ax1.set_title('Cut along the x direction')
 ax2.set_title('Cut along the y direction')
 plt.show()
 plt.close()
+
+
+# Plotting the localisation
+for state in range(energies1.shape[1]):
+    loc = np.zeros(blochvectors1.shape[1]//3)
+    amplitudes = np.square(np.abs(blochvectors1[0,:,state])) #localisation at a specific k
+    for i in range(len(loc)):
+        loc[i] = np.sum(amplitudes[3*i:3*i+3])
+
+    #plotting
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,15))
+    colours = list(np.zeros(energies1.shape[1]))
+    for i in range(energies1.shape[1]):
+        if i == state:
+            ax1.plot(k1, energies1[:,i], c='magenta', zorder=10, linewidth=2)
+        else:
+            ax1.plot(k1, energies1[:,i], c='0', zorder=1)
+    ax1.set_ylabel('$2\pi E / \omega$')
+    ax1.set_yticks([-2*np.pi, -3/2*np.pi, -np.pi, -1/2*np.pi, 0, 1/2*np.pi, np.pi, 
+                3/2*np.pi, 2*np.pi], ['$-2\pi$','$-3/2\pi$','$-\pi$','$-1/2\pi$',
+                                    '$0$','$1/2\pi$','$\pi$','$3/2\pi$','$2\pi$'])
+    ax1.set_xlabel('$k_x$')
+    ax1.set_xticks([0, np.pi/2, np.pi, 3*np.pi/2, 2*np.pi], ['0','','$\pi$','','$2\pi$'])
+    ax1.set_xlim(0, 2*np.pi)
+    ax1.set_ylim(lowest_quasi_energy, lowest_quasi_energy + 2*np.pi)
+
+    positions = np.linspace(0,blochvectors1.shape[1] / 3,blochvectors1.shape[1] // 3)
+    ax2.scatter(positions, loc)
+    plt.title('Cut along the x direction')
+    plt.savefig('edge_state_localisation_a1/edge_state_localisation_{state}'.format(state=state))
+    plt.close(fig)
+
+for state in range(energies2.shape[1]):
+    loc = np.zeros(blochvectors2.shape[1]//3)
+    amplitudes = np.square(np.abs(blochvectors2[0,:,state])) #localisation at a specific k
+    for i in range(len(loc)):
+        loc[i] = np.sum(amplitudes[3*i:3*i+3])
+
+    #plotting
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,15))
+    colours = list(np.zeros(energies2.shape[1]))
+    for i in range(energies2.shape[1]):
+        if i == state:
+            ax1.plot(k2, energies2[:,i], c='magenta', zorder=10, linewidth=2)
+        else:
+            ax1.plot(k2, energies2[:,i], c='0', zorder=1)
+    ax1.set_ylabel('$2\pi E / \omega$')
+    ax1.set_yticks([-2*np.pi, -3/2*np.pi, -np.pi, -1/2*np.pi, 0, 1/2*np.pi, np.pi, 
+                3/2*np.pi, 2*np.pi], ['$-2\pi$','$-3/2\pi$','$-\pi$','$-1/2\pi$',
+                                    '$0$','$1/2\pi$','$\pi$','$3/2\pi$','$2\pi$'])
+    ax1.set_xlabel('$k_y$')
+    ax1.set_xticks([0, np.pi/2, np.pi, 3*np.pi/2, 2*np.pi], ['0','','$\pi$','','$2\pi$'])
+    ax1.set_xlim(0, 2*np.pi)
+    ax1.set_ylim(lowest_quasi_energy, lowest_quasi_energy + 2*np.pi)
+
+    positions = np.linspace(0,blochvectors2.shape[1] / 3,blochvectors2.shape[1] // 3)
+    ax2.scatter(positions, loc)
+    plt.title('Cut along the y direction')
+    plt.savefig('edge_state_localisation_a2/edge_state_localisation_{state}'.format(state=state))
+    plt.close(fig)
+
 
 
         

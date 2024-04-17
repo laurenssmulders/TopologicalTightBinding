@@ -384,13 +384,13 @@ def plot_bandstructure2D(energy_grid,
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     if bands_to_plot[0]:
         surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.YlGnBu,
-                                linewidth=0)
+                                linewidth=0, rstride=1, cstride=1)
     if bands_to_plot[1]:
         surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.PuRd,
-                                linewidth=0)
+                                linewidth=0, rstride=1, cstride=1)
     if bands_to_plot[2]:
         surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.YlOrRd,
-                                linewidth=0)
+                                linewidth=0, rstride=1, cstride=1)
     tick_values = np.linspace(-4,4,9) * np.pi / 2
     tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
     ax.set_xticks(tick_values)
