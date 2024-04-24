@@ -390,13 +390,13 @@ def plot_bandstructure2D(energy_grid,
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     if bands_to_plot[0]:
-        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.YlGnBu,
+        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.YlGnBu, edgecolor='darkblue',
                                 linewidth=0, rstride=r, cstride=c)
     if bands_to_plot[1]:
-        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.PuRd,
+        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.PuRd, edgecolor='purple',
                                 linewidth=0, rstride=r, cstride=c)
     if bands_to_plot[2]:
-        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.YlOrRd,
+        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.YlOrRd, edgecolor='darkred',
                                 linewidth=0, rstride=r, cstride=c)
         
     # Get rid of colored axes planes
