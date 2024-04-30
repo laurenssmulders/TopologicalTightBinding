@@ -8,9 +8,9 @@ from tight_binding.bandstructure import sort_energy_grid, plot_bandstructure2D, 
 from tight_binding.topology import gauge_fix_grid
 
 # Parameters
-num_points = 100
+num_points = 300
 T = 1
-d1 = -2*np.pi/(3*T)
+d1 = 0
 d2 = 0
 d3 = 2*np.pi/(3*T)
 N = 1
@@ -18,7 +18,7 @@ num_steps = 100
 lowest_quasi_energy = -np.pi
 a1 = np.array([1,0])
 a2 = np.array([0,1])
-L = 30
+L = 10
 
 # The blochvector structures
 print('Generating the blochvector structures...')
@@ -63,17 +63,17 @@ for i in range(Eu.shape[0]):
 ### removing divergences        
 for i in range(Eu.shape[0]):
     for j in range(Eu.shape[1]):
-        if np.abs(Eu[i,j]) > 5:
+        if np.abs(Eu[i,j]) > 20:
             if j != 0:
                 Eu[i,j] = Eu[i,j-1]
             elif i != 0:
                 Eu[i,j] = Eu[i-1,j]
             else:
                 shift = 0
-                while np.abs(Eu[i,j]) > 5 and shift < 10:
+                while np.abs(Eu[i,j]) > 20 and shift < 10:
                     shift += 1
                     Eu[i,j] = Eu[i + shift,j]
-            if np.abs(Eu[i,j]) > 5:
+            if np.abs(Eu[i,j]) > 20:
                     Eu[i,j] = 0
 
 ### Plotting Euler Curvature
@@ -95,30 +95,18 @@ ax.set_box_aspect([1, 1, 2])
 plt.show()
 plt.close()
 
-# Doing y integrals
-integ_x = np.zeros(Eu.shape[0])
-for i in range(len(integ_x)):
-    integ_x[i] = np.sum((Eu[i,1:] + Eu[i,:num_points-1]) / 2)*dk
-    
-# Doing the x integral
-surface_term = 1 / (2*np.pi) * np.sum((integ_x[1:] 
-                        + integ_x[:num_points-1]) / 2)*dk
+chi = np.sum(Eu) * dk**2 / (2*np.pi)
+## I think the euler class is too 'localised' to properly calculate
 
-print('Euler class: {chi}'.format(chi=surface_term))
+print('Euler class: {chi}'.format(chi=chi))
 
-'''# The hamiltonians
+# The hamiltonians
 print('Calculating the hamiltonians...')
 H1A = np.matmul(V1,np.matmul(np.diag([d1,d2,d3]),np.transpose(V1,(0,1,3,2))))
-H1B = np.matmul(V1,np.matmul(np.diag([-d1-4*np.pi/T,0,-d3+4*np.pi/T]),np.transpose(V1,(0,1,3,2))))
+H1B = np.matmul(V1,np.matmul(np.diag([0,0,-1]),np.transpose(V1,(0,1,3,2))))
 
-H2A = np.matmul(V2,np.matmul(np.diag([-8*np.pi/T,2*d2,8*np.pi/T-d3]),np.transpose(V2,(0,1,3,2))))
-H2B = np.matmul(V2,np.matmul(np.diag([4*np.pi/T,-d2,d3-4*np.pi/T]),np.transpose(V2,(0,1,3,2))))
-
-H3A = np.matmul(V3,np.matmul(np.diag([-2*d1,0,3*d3]),np.transpose(V3,(0,1,3,2))))
-H3B = np.matmul(V3,np.matmul(np.diag([d1,0,-d3]),np.transpose(V3,(0,1,3,2))))
-
-H4A = np.matmul(V4,np.matmul(np.diag([d1,-3*d2,-3*d3]),np.transpose(V4,(0,1,3,2))))
-H4B = np.matmul(V4,np.matmul(np.diag([0,d2,d3]),np.transpose(V4,(0,1,3,2))))
+H2A = np.matmul(V2,np.matmul(np.diag([-d1,d2,-d3]),np.transpose(V2,(0,1,3,2))))
+H2B = np.matmul(V2,np.matmul(np.diag([0,0,1]),np.transpose(V2,(0,1,3,2))))
 
 # The tunnelings
 print('Calculating the tunnelings...')
@@ -129,10 +117,6 @@ J1A = np.zeros((2*N+1,2*N+1,3,3),dtype='complex')
 J1B = np.zeros((2*N+1,2*N+1,3,3),dtype='complex')
 J2A = np.zeros((2*N+1,2*N+1,3,3),dtype='complex')
 J2B = np.zeros((2*N+1,2*N+1,3,3),dtype='complex')
-J3A = np.zeros((2*N+1,2*N+1,3,3),dtype='complex')
-J3B = np.zeros((2*N+1,2*N+1,3,3),dtype='complex')
-J4A = np.zeros((2*N+1,2*N+1,3,3),dtype='complex')
-J4B = np.zeros((2*N+1,2*N+1,3,3),dtype='complex')
 
 k1 = np.linspace(0,1,num_points,False)
 k1 = k1[:,np.newaxis,np.newaxis,np.newaxis]
@@ -155,38 +139,22 @@ for i in range(2*N+1):
         integrand1B = H1B * exponent
         integrand2A = H2A * exponent
         integrand2B = H2B * exponent
-        integrand3A = H3A * exponent
-        integrand3B = H3B * exponent
-        integrand4A = H4A * exponent
-        integrand4B = H4B * exponent
 
         J1A[i,j] = -np.sum(integrand1A,(0,1)) * dk**2
         J1B[i,j] = -np.sum(integrand1B,(0,1)) * dk**2
         J2A[i,j] = -np.sum(integrand2A,(0,1)) * dk**2
         J2B[i,j] = -np.sum(integrand2B,(0,1)) * dk**2
-        J3A[i,j] = -np.sum(integrand3A,(0,1)) * dk**2
-        J3B[i,j] = -np.sum(integrand3B,(0,1)) * dk**2
-        J4A[i,j] = -np.sum(integrand4A,(0,1)) * dk**2
-        J4B[i,j] = -np.sum(integrand4B,(0,1)) * dk**2
 
 np.save('hoppings/J1A.npy',J1A)
 np.save('hoppings/J1B.npy',J1B)
 np.save('hoppings/J2A.npy',J2A)
 np.save('hoppings/J2B.npy',J2B)
-np.save('hoppings/J3A.npy',J3A)
-np.save('hoppings/J3B.npy',J3B)
-np.save('hoppings/J4A.npy',J4A)
-np.save('hoppings/J4B.npy',J4B)
 
 def J(t):
-    if (t%T) < T/4:
-        hoppings = J1A + J1B * 8*t/T
-    elif (t%T) <T/2:
-        hoppings = J2A + J2B * 8*t/T
-    elif (t%T) < 3*T/4:
-        hoppings = J3A + J3B * 8*t/T
+    if (t%T) < T/2:
+        hoppings = J1A + J1B * 8*np.pi*t/(3*T**2)
     else:
-        hoppings = J4A + J4B * 8*t/T
+        hoppings = J2A + J2B * 8*np.pi*t/(3*T**2)
     return hoppings
 
 
@@ -248,54 +216,71 @@ blochvectors = np.real(blochvectors)
 
 energies, blochvectors = sort_energy_grid(energies,blochvectors)
 
+# Checking the euler class of the final structure
+print('Calculating Euler class...')
+vectors = gauge_fix_grid(blochvectors)
+
+### calculating the x and y derivatives of the blochvectors
+dk = 2*np.pi / num_points
+xder = np.zeros((num_points,num_points,3,3), dtype='float')
+for i in range(xder.shape[0]):
+    for j in range(xder.shape[1]):
+        xder[i,j] = (vectors[(i+1)%num_points,j] - vectors[i,j]) / dk
+
+yder = np.zeros((num_points,num_points,3,3), dtype='float')
+for i in range(yder.shape[0]):
+    for j in range(yder.shape[1]):
+        yder[i,j] = (vectors[i,(j+1)%num_points] - vectors[i,j]) / dk
+
+Eu = np.zeros((num_points,num_points), dtype='float')
+for i in range(Eu.shape[0]):
+    for j in range(Eu.shape[1]):
+        Eu[i,j] = (np.vdot(xder[i,j,:,0],yder[i,j,:,1])
+                - np.vdot(yder[i,j,:,0],xder[i,j,:,1]))
+
+### removing divergences        
+for i in range(Eu.shape[0]):
+    for j in range(Eu.shape[1]):
+        if np.abs(Eu[i,j]) > 5:
+            if j != 0:
+                Eu[i,j] = Eu[i,j-1]
+            elif i != 0:
+                Eu[i,j] = Eu[i-1,j]
+            else:
+                shift = 0
+                while np.abs(Eu[i,j]) > 5 and shift < 10:
+                    shift += 1
+                    Eu[i,j] = Eu[i + shift,j]
+            if np.abs(Eu[i,j]) > 5:
+                    Eu[i,j] = 0
+
+### Plotting Euler Curvature
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+surf1 = ax.plot_surface(kx, ky, Eu, cmap=cm.YlGnBu,
+                            linewidth=0)
+tick_values = np.linspace(-4,4,9) * np.pi / 2
+tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
+ax.set_xticks(tick_values)
+ax.set_xticklabels(tick_labels)
+ax.set_yticks(tick_values)
+ax.set_yticklabels(tick_labels)
+ax.set_xlim(0,2*np.pi)
+ax.set_ylim(0,2*np.pi)
+ax.set_xlabel('$k_x$')
+ax.set_ylabel('$k_y$')
+ax.grid(False)
+ax.set_box_aspect([1, 1, 2])
+plt.show()
+plt.close()
+
+chi = np.sum(Eu) * dk**2 / (2*np.pi)
+## I think the euler class is too 'localised' to properly calculate
+
+print('Euler class: {chi}'.format(chi=chi))
+
 # plotting
 print('Plotting...')
 plot_bandstructure2D(energies,a1,a2,'test.png',lowest_quasi_energy=lowest_quasi_energy)
-
-# Calculating Zak phases
-vectors = blochvectors[:,0]
-overlaps = np.ones((num_points, 3), dtype='complex')
-for i in range(num_points):
-    for band in range(3):
-        overlaps[i, band] = np.vdot(vectors[i,:,band], 
-                                    vectors[(i+1)%num_points,:,band])
-zak_phase = np.zeros((3,), dtype='complex')
-for band in range(3):
-    zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the x direction along the middle: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
-
-vectors = blochvectors[:,num_points//2]
-overlaps = np.ones((num_points, 3), dtype='complex')
-for i in range(num_points):
-    for band in range(3):
-        overlaps[i, band] = np.vdot(vectors[i,:,band], 
-                                    vectors[(i+1)%num_points,:,band])
-zak_phase = np.zeros((3,), dtype='complex')
-for band in range(3):
-    zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the x direction along the edge: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
-
-vectors = blochvectors[0,:]
-overlaps = np.ones((num_points, 3), dtype='complex')
-for i in range(num_points):
-    for band in range(3):
-        overlaps[i, band] = np.vdot(vectors[i,:,band], 
-                                    vectors[(i+1)%num_points,:,band])
-zak_phase = np.zeros((3,), dtype='complex')
-for band in range(3):
-    zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the y direction along the middle: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
-
-vectors = blochvectors[num_points//2,:]
-overlaps = np.ones((num_points, 3), dtype='complex')
-for i in range(num_points):
-    for band in range(3):
-        overlaps[i, band] = np.vdot(vectors[i,:,band], 
-                                    vectors[(i+1)%num_points,:,band])
-zak_phase = np.zeros((3,), dtype='complex')
-for band in range(3):
-    zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the y direction along the edge: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
 
 # Calculating the finite hamiltonions in both directions
 print('Calculating the finite hamiltonians...')
@@ -350,7 +335,7 @@ if error2 > 1e-5:
 print('Diagonalising the finite time evolution operators...')
 eigenvalues1, blochvectors1 = np.linalg.eig(U1)
 eigenvalues2, blochvectors2 = np.linalg.eig(U2)
-print(eigenvalues1.shape)
+
 energies1 = np.real(1j*np.log(eigenvalues1))
 energies1 = (energies1 + 2*np.pi*np.floor((lowest_quasi_energy-energies1) 
                                                 / (2*np.pi) + 1))
@@ -486,15 +471,4 @@ for state in range(energies2.shape[1]):
     ax2.scatter(positions, loc)
     plt.title('Cut along the y direction')
     plt.savefig('edge_state_localisation_a2/edge_state_localisation_{state}'.format(state=state))
-    plt.close(fig)'''
-
-
-
-        
-
-
-
-
-
-
-
+    plt.close(fig)
