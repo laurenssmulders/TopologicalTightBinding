@@ -308,7 +308,9 @@ def plot_bandstructure2D(energy_grid,
                          lowest_quasi_energy=-np.pi,
                          regime='driven',
                          discontinuity_threshold=0.05,
-                         show_plot=True):
+                         show_plot=True,
+                         r=10,
+                         c=10):
     """Plots the bandstructure calculated from compute_bandstructure2D for 3 
     band systems
     
@@ -340,6 +342,10 @@ def plot_bandstructure2D(energy_grid,
         The values to not plot near the upper and lower boundaries of the FBZ
     show_plot: bool
         Whether to show the plot
+    r: float
+        The rstride value for the plot
+    c: float
+        The cstride value for the plot
     """
     # Need to periodically extend the energy array to span the whole region
     b_1, b_2 = compute_reciprocal_lattice_vectors_2D(a_1, a_2)
@@ -381,16 +387,33 @@ def plot_bandstructure2D(energy_grid,
             E[band] = np.where(discontinuity_mask, np.nan, E[band])
 
     # Plotting
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
     if bands_to_plot[0]:
-        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.YlGnBu,
-                                linewidth=0)
+        surf1 = ax.plot_surface(kx, ky, E[0], cmap=cm.YlGnBu, edgecolor='darkblue',
+                                linewidth=0, rstride=r, cstride=c)
     if bands_to_plot[1]:
-        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.PuRd,
-                                linewidth=0)
+        surf2 = ax.plot_surface(kx, ky, E[1], cmap=cm.PuRd, edgecolor='purple',
+                                linewidth=0, rstride=r, cstride=c)
     if bands_to_plot[2]:
-        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.YlOrRd,
-                                linewidth=0)
+        surf3 = ax.plot_surface(kx, ky, E[2], cmap=cm.YlOrRd, edgecolor='darkred',
+                                linewidth=0, rstride=r, cstride=c)
+        
+    # Get rid of colored axes planes
+    # First remove fill
+    ax.xaxis.pane.fill = False
+    ax.yaxis.pane.fill = False
+    ax.zaxis.pane.fill = False
+
+    # Now set color to white (or whatever is "invisible")
+    ax.xaxis.pane.set_edgecolor('w')
+    ax.yaxis.pane.set_edgecolor('w')
+    ax.zaxis.pane.set_edgecolor('w')
+
+    ax.xaxis._axinfo["grid"].update({"linewidth":0.5})
+    ax.yaxis._axinfo["grid"].update({"linewidth":0.5})
+    ax.zaxis._axinfo["grid"].update({"linewidth":0.5})
+
     tick_values = np.linspace(-4,4,9) * np.pi / 2
     tick_labels = ['$-2\pi$', '', '$-\pi$', '', '0', '', '$\pi$', '', '$2\pi$']
     ax.set_xticks(tick_values)
@@ -407,7 +430,6 @@ def plot_bandstructure2D(energy_grid,
     ax.set_ylim(kymin,kymax)
     ax.set_xlabel('$k_x$')
     ax.set_ylabel('$k_y$')
-    ax.grid(False)
     ax.set_box_aspect([1, 1, 2])
     plt.savefig(save)
     if show_plot:
