@@ -8,15 +8,22 @@ from tight_binding.bandstructure import sort_energy_grid, plot_bandstructure2D, 
 # Parameters
 num_points = 100
 T = 1
-d1 = -2*np.pi/(3*T)
-d2 = 0
-d3 = 2*np.pi/(3*T)
+dC = -2*np.pi/(3*T)
+dA = 0
+dB = 2*np.pi/(3*T)
 N = 1
 num_steps = 100
 lowest_quasi_energy = -np.pi
 a1 = np.array([1,0])
 a2 = np.array([1,3**0.5])*0.5
 L = 30
+rA = (a2-a1) / 2
+rB = a2 / 2
+rC = a1 / 2
+b1,b2 = compute_reciprocal_lattice_vectors_2D(a1,a2)
+r=1
+c=1
+
 
 # The blochvector structures
 print('Generating the blochvector structures...')
@@ -28,17 +35,17 @@ V1 = np.repeat(V1, num_points, 1)
 V2 = np.zeros((num_points,num_points,3,3), dtype='float')
 for i in range(num_points):
     for j in range(num_points):
-        V2[i,j] = rotate(np.pi*i/num_points,np.array([0,1,0]))
+        V2[i,j] = rotate(np.pi*j/num_points,np.array([0,1,0]))
 
 V3 = np.zeros((num_points,num_points,3,3), dtype='float')
 for i in range(num_points):
     for j in range(num_points):
-        V3[i,j] = rotate(np.pi*i/num_points,V2[i,j,:,2]) @ V2[i,j]
+        V3[i,j] = rotate(np.pi*i/num_points,V2[i,j,:,0]) @ V2[i,j]
 
 V4 = np.zeros((num_points,num_points,3,3), dtype='float')
 for i in range(num_points):
     for j in range(num_points):
-        V4[i,j] = rotate(np.pi*j/num_points,V3[i,j,:,0]) @ V3[i,j]
+        V4[i,j] = rotate(np.pi*j/num_points,V3[i,j,:,2]) @ V3[i,j]
 
 # Checking the zak phases of the final structure
 vectors = V4[:,0]
@@ -47,10 +54,15 @@ for i in range(num_points):
     for band in range(3):
         overlaps[i, band] = np.vdot(vectors[i,:,band], 
                                     vectors[(i+1)%num_points,:,band])
+last_vector = np.matmul(np.diag([np.exp(-1j*np.vdot(b1,rA)),
+                                 np.exp(-1j*np.vdot(b1,rB)),
+                                 np.exp(-1j*np.vdot(b1,rC))]),vectors[0])
+for band in range(3):
+    overlaps[-1,band] = np.vdot(vectors[-1,:,band],last_vector[:,band])
 zak_phase = np.zeros((3,), dtype='complex')
 for band in range(3):
     zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the x direction along the middle: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
+print('Zak phase in the b1 direction along the middle: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
 
 vectors = V4[:,num_points//2]
 overlaps = np.ones((num_points, 3), dtype='complex')
@@ -58,10 +70,15 @@ for i in range(num_points):
     for band in range(3):
         overlaps[i, band] = np.vdot(vectors[i,:,band], 
                                     vectors[(i+1)%num_points,:,band])
+last_vector = np.matmul(np.diag([np.exp(-1j*np.vdot(b1,rA)),
+                                 np.exp(-1j*np.vdot(b1,rB)),
+                                 np.exp(-1j*np.vdot(b1,rC))]),vectors[0])
+for band in range(3):
+    overlaps[-1,band] = np.vdot(vectors[-1,:,band],last_vector[:,band])
 zak_phase = np.zeros((3,), dtype='complex')
 for band in range(3):
     zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the x direction along the edge: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
+print('Zak phase in the b1 direction along the edge: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
 
 vectors = V4[0,:]
 overlaps = np.ones((num_points, 3), dtype='complex')
@@ -69,10 +86,15 @@ for i in range(num_points):
     for band in range(3):
         overlaps[i, band] = np.vdot(vectors[i,:,band], 
                                     vectors[(i+1)%num_points,:,band])
+last_vector = np.matmul(np.diag([np.exp(-1j*np.vdot(b2,rA)),
+                                 np.exp(-1j*np.vdot(b2,rB)),
+                                 np.exp(-1j*np.vdot(b2,rC))]),vectors[0])
+for band in range(3):
+    overlaps[-1,band] = np.vdot(vectors[-1,:,band],last_vector[:,band])
 zak_phase = np.zeros((3,), dtype='complex')
 for band in range(3):
     zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the y direction along the middle: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
+print('Zak phase in the b2 direction along the middle: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
 
 vectors = V4[num_points//2,:]
 overlaps = np.ones((num_points, 3), dtype='complex')
@@ -80,24 +102,29 @@ for i in range(num_points):
     for band in range(3):
         overlaps[i, band] = np.vdot(vectors[i,:,band], 
                                     vectors[(i+1)%num_points,:,band])
+last_vector = np.matmul(np.diag([np.exp(-1j*np.vdot(b2,rA)),
+                                 np.exp(-1j*np.vdot(b2,rB)),
+                                 np.exp(-1j*np.vdot(b2,rC))]),vectors[0])
+for band in range(3):
+    overlaps[-1,band] = np.vdot(vectors[-1,:,band],last_vector[:,band])
 zak_phase = np.zeros((3,), dtype='complex')
 for band in range(3):
     zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the y direction along the edge: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
+print('Zak phase in the b2 direction along the edge: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
 
 # The hamiltonians
 print('Calculating the hamiltonians...')
-H1A = np.matmul(V1,np.matmul(np.diag([d1,d2,d3]),np.transpose(V1,(0,1,3,2))))
-H1B = np.matmul(V1,np.matmul(np.diag([-d1-4*np.pi/T,0,-d3+4*np.pi/T]),np.transpose(V1,(0,1,3,2))))
+H1A = np.matmul(V1,np.matmul(np.diag([0,dB,dC]),np.transpose(V1,(0,1,3,2))))
+H1B = np.matmul(V1,np.matmul(np.diag([0,0,-dC]),np.transpose(V1,(0,1,3,2))))
 
-H2A = np.matmul(V2,np.matmul(np.diag([-8*np.pi/T,2*d2,8*np.pi/T-d3]),np.transpose(V2,(0,1,3,2))))
-H2B = np.matmul(V2,np.matmul(np.diag([4*np.pi/T,-d2,d3-4*np.pi/T]),np.transpose(V2,(0,1,3,2))))
+H2A = np.matmul(V2,np.matmul(np.diag([0,2*dB-2*np.pi/T,2*np.pi/T]),np.transpose(V2,(0,1,3,2))))
+H2B = np.matmul(V2,np.matmul(np.diag([0,2*np.pi/T-dB,-2*np.pi/T]),np.transpose(V2,(0,1,3,2))))
 
-H3A = np.matmul(V3,np.matmul(np.diag([-2*d1,0,3*d3]),np.transpose(V3,(0,1,3,2))))
-H3B = np.matmul(V3,np.matmul(np.diag([d1,0,-d3]),np.transpose(V3,(0,1,3,2))))
+H3A = np.matmul(V3,np.matmul(np.diag([0,6*np.pi/T,-2*dC-6*np.pi/T]),np.transpose(V3,(0,1,3,2))))
+H3B = np.matmul(V3,np.matmul(np.diag([0,-2*np.pi/T,dC+2*np.pi/T]),np.transpose(V3,(0,1,3,2))))
 
-H4A = np.matmul(V4,np.matmul(np.diag([d1,-3*d2,-3*d3]),np.transpose(V4,(0,1,3,2))))
-H4B = np.matmul(V4,np.matmul(np.diag([0,d2,d3]),np.transpose(V4,(0,1,3,2))))
+H4A = np.matmul(V4,np.matmul(np.diag([0,-3*dB,dC]),np.transpose(V4,(0,1,3,2))))
+H4B = np.matmul(V4,np.matmul(np.diag([0,dB,0]),np.transpose(V4,(0,1,3,2))))
 
 # The offset matrix
 S = np.zeros((num_points,num_points,3,3), dtype='complex')
@@ -196,7 +223,9 @@ for i in range(2*N+1):
         exponent = np.exp(1j*2*np.pi*(n1[i]*k1+n2[j]*k2))
         exponent = exponent[np.newaxis,:,:,:,:]
         exponent = np.repeat(exponent,num_steps,0)
-        hamiltonian -= np.matmul(np.matmul(S[i,j],hoppings[:,:,:,i,j,:,:]),np.conjugate(np.transpose(S[i,j]))) * exponent
+        S_time = S[np.newaxis,:,:,:,:]
+        S_time = np.repeat(S_time,num_steps,0)
+        hamiltonian -= np.matmul(np.matmul(S_time,hoppings[:,:,:,i,j,:,:]),np.conjugate(np.transpose(S_time,(0,1,2,4,3)))) * exponent
 
 # Calculating the time evolution operator
 print('Calculating the time evolution operator...')
@@ -214,7 +243,7 @@ identity = np.identity(3)
 identity = identity[np.newaxis,np.newaxis,:,:]
 identity = np.repeat(identity,num_points,0)
 identity = np.repeat(identity,num_points,1)
-error = np.sum(np.abs(identity - np.matmul(U,np.conjugate(np.transpose(U,(0,1,3,2))))))
+error = np.sum(np.abs(identity - np.matmul(U,np.conjugate(np.transpose(U,(0,1,3,2)))))) / num_points**2
 if error > 1e-5:
     print('High normalisation error!: {error}'.format(error=error))
 
@@ -239,19 +268,24 @@ energies, blochvectors = sort_energy_grid(energies,blochvectors)
 
 # plotting
 print('Plotting...')
-plot_bandstructure2D(energies,a1,a2,'test.png',lowest_quasi_energy=lowest_quasi_energy)
+plot_bandstructure2D(energies,a1,a2,'test.png',lowest_quasi_energy=lowest_quasi_energy,r=r,c=c)
 
 # Calculating Zak phases
 vectors = blochvectors[:,0]
 overlaps = np.ones((num_points, 3), dtype='complex')
-for i in range(num_points):
+for i in range(num_points-1):
     for band in range(3):
         overlaps[i, band] = np.vdot(vectors[i,:,band], 
                                     vectors[(i+1)%num_points,:,band])
+last_vector = np.matmul(np.diag([np.exp(-1j*np.vdot(b1,rA)),
+                                 np.exp(-1j*np.vdot(b1,rB)),
+                                 np.exp(-1j*np.vdot(b1,rC))]),vectors[0])
+for band in range(3):
+    overlaps[-1,band] = np.vdot(vectors[-1,:,band],last_vector[:,band])
 zak_phase = np.zeros((3,), dtype='complex')
 for band in range(3):
     zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the x direction along the middle: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
+print('Zak phase in the b1 direction along the middle: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
 
 vectors = blochvectors[:,num_points//2]
 overlaps = np.ones((num_points, 3), dtype='complex')
@@ -259,10 +293,15 @@ for i in range(num_points):
     for band in range(3):
         overlaps[i, band] = np.vdot(vectors[i,:,band], 
                                     vectors[(i+1)%num_points,:,band])
+last_vector = np.matmul(np.diag([np.exp(-1j*np.vdot(b1,rA)),
+                                 np.exp(-1j*np.vdot(b1,rB)),
+                                 np.exp(-1j*np.vdot(b1,rC))]),vectors[0])
+for band in range(3):
+    overlaps[-1,band] = np.vdot(vectors[-1,:,band],last_vector[:,band])
 zak_phase = np.zeros((3,), dtype='complex')
 for band in range(3):
     zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the x direction along the edge: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
+print('Zak phase in the b1 direction along the edge: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
 
 vectors = blochvectors[0,:]
 overlaps = np.ones((num_points, 3), dtype='complex')
@@ -270,10 +309,15 @@ for i in range(num_points):
     for band in range(3):
         overlaps[i, band] = np.vdot(vectors[i,:,band], 
                                     vectors[(i+1)%num_points,:,band])
+last_vector = np.matmul(np.diag([np.exp(-1j*np.vdot(b2,rA)),
+                                 np.exp(-1j*np.vdot(b2,rB)),
+                                 np.exp(-1j*np.vdot(b2,rC))]),vectors[0])
+for band in range(3):
+    overlaps[-1,band] = np.vdot(vectors[-1,:,band],last_vector[:,band])
 zak_phase = np.zeros((3,), dtype='complex')
 for band in range(3):
     zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the y direction along the middle: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
+print('Zak phase in the b2 direction along the middle: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
 
 vectors = blochvectors[num_points//2,:]
 overlaps = np.ones((num_points, 3), dtype='complex')
@@ -281,10 +325,15 @@ for i in range(num_points):
     for band in range(3):
         overlaps[i, band] = np.vdot(vectors[i,:,band], 
                                     vectors[(i+1)%num_points,:,band])
+last_vector = np.matmul(np.diag([np.exp(-1j*np.vdot(b2,rA)),
+                                 np.exp(-1j*np.vdot(b2,rB)),
+                                 np.exp(-1j*np.vdot(b2,rC))]),vectors[0])
+for band in range(3):
+    overlaps[-1,band] = np.vdot(vectors[-1,:,band],last_vector[:,band])
 zak_phase = np.zeros((3,), dtype='complex')
 for band in range(3):
     zak_phase[band] = 1j*np.log(np.prod(overlaps[:,band]))
-print('Zak phase in the y direction along the edge: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
+print('Zak phase in the b2 direction along the edge: {zak_phase}'.format(zak_phase=np.real(zak_phase/np.pi)))
 
 # Calculating the finite hamiltonions in both directions
 print('Calculating the finite hamiltonians...')
@@ -296,9 +345,25 @@ for t in range(num_steps):
             for k in range(2*N+1):
                 for l in range(2*N+1):
                     if m2+n2[l] >=0 and m2+n2[l] < L:
-                        hamiltonian1[t,i,3*(m2+n2[l]):3*(m2+n2[l])+3,3*m2:3*m2+3] -= J(t/num_steps*T)[k,l]*np.exp(1j*2*np.pi*n1[k]*i/num_points)
+                        hamiltonian1[t,
+                                     i,
+                                     3*(m2+n2[l]):3*(m2+n2[l])+3,
+                                     3*m2:3*m2+3] -= (
+                                         np.diag(np.exp(
+                                            np.array([-1j*np.pi*i/num_points,
+                                                       0,
+                                                       1j*np.pi*i/num_points])))
+                                            @J(t/num_steps*T)[k,l]
+                                            @np.conjugate(
+                                                np.diag(
+                                                    np.exp(
+                                                        np.array([-1j*np.pi*i/num_points,
+                                                                  0,
+                                                                  1j*np.pi*i/num_points]))))
+                                                                  *np.exp(1j*2*np.pi*n1[k]*i/num_points))
 
-# Along a1
+
+# Along a2
 hamiltonian2 = np.zeros((num_steps,num_points,3*L,3*L), dtype='complex')
 for t in range(num_steps):
     for m1 in range(L):
@@ -306,7 +371,24 @@ for t in range(num_steps):
             for k in range(2*N+1):
                 for l in range(2*N+1):
                     if m1+n1[k] >=0 and m1+n1[k] < L:
-                        hamiltonian2[t,j,3*(m1+n1[k]):3*(m1+n1[k])+3,3*m1:3*m1+3] -= J(t/num_steps*T)[k,l]*np.exp(1j*2*np.pi*n2[l]*j/num_points)
+                        hamiltonian2[t,
+                                     j,
+                                     3*(m1+n1[k]):3*(m1+n1[k])+3,
+                                     3*m1:3*m1+3] -= (
+                                         np.diag(np.exp(
+                                            np.array([1j*np.pi*j/num_points,
+                                                      1j*np.pi*j/num_points,
+                                                      0])))
+                                            @J(t/num_steps*T)[k,l]
+                                            @np.conjugate(
+                                                np.diag(
+                                                    np.exp(
+                                                        np.array([1j*np.pi*j/num_points,
+                                                                  1j*np.pi*j/num_points,
+                                                                  0]))))
+                                                                  *np.exp(1j*2*np.pi*n2[l]*j/num_points))
+
+
 
 
 # Calculating the finite time evolution operators
@@ -339,7 +421,6 @@ if error2 > 1e-5:
 print('Diagonalising the finite time evolution operators...')
 eigenvalues1, blochvectors1 = np.linalg.eig(U1)
 eigenvalues2, blochvectors2 = np.linalg.eig(U2)
-print(eigenvalues1.shape)
 energies1 = np.real(1j*np.log(eigenvalues1))
 energies1 = (energies1 + 2*np.pi*np.floor((lowest_quasi_energy-energies1) 
                                                 / (2*np.pi) + 1))
@@ -412,8 +493,8 @@ ax1.set_xlim(0,np.linalg.norm(b1))
 ax2.set_xlim(0,np.linalg.norm(b2))
 ax1.set_ylim(lowest_quasi_energy, lowest_quasi_energy + 2*np.pi)
 ax2.set_ylim(lowest_quasi_energy, lowest_quasi_energy + 2*np.pi)
-ax1.set_title('Cut along the x direction')
-ax2.set_title('Cut along the y direction')
+ax1.set_title('Cut along the a1 direction')
+ax2.set_title('Cut along the a2 direction')
 plt.show()
 plt.close()
 
