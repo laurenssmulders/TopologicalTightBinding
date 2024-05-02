@@ -6,12 +6,12 @@ from tight_binding.bandstructure import compute_bandstructure2D, plot_bandstruct
 from tight_binding.topology import compute_zak_phase, compute_patch_euler_class
 from tight_binding.diagonalise import compute_eigenstates
 
-plotting = False
+plotting = True
 slicing = False
 zak = False
 patch_euler_class = False
 saving = True
-finite_geometry = False
+finite_geometry = True
 plot_from_save = False
 edge_state_localisation = True
 
@@ -35,6 +35,8 @@ num_steps = 100
 num_lines = 100
 lowest_quasi_energy = -np.pi / 2
 offsets = np.zeros((3,2))
+r=1
+c=1
 
 
 ### Zak phase parameters
@@ -102,7 +104,7 @@ if plotting:
     plot_bandstructure2D(energies, a_1, a_2, save, 
                          bands_to_plot=bands_to_plot, 
                          lowest_quasi_energy=lowest_quasi_energy, 
-                         discontinuity_threshold = 0.05)
+                         discontinuity_threshold = 0.05,r=r,c=c)
 
     if saving:
         grid_directory = directory + '/grids'
@@ -300,15 +302,15 @@ if edge_state_localisation:
     for state in range(E.shape[1]):
         loc = np.zeros(blochvectors.shape[1]//3)
         amplitudes = np.square(np.abs(blochvectors[0,:,state])) #localisation at a specific k
-        for i in range(len(loc)):
-            loc[i] = np.sum(amplitudes[3*i:3*i+3])
-        #for j in range(len(k)):
-            #amplitudes = np.square(np.abs(blochvectors[j,:,state]))
-            #kloc = np.zeros(blochvectors.shape[1]//3)
-            #for i in range(len(kloc)):
-                #kloc[i] = np.sum(amplitudes[3*i:3*i+3])
-            #loc += kloc
-        #loc = loc / len(k) # averaging localisation over all k
+        #for i in range(len(loc)):
+         #   loc[i] = np.sum(amplitudes[3*i:3*i+3])
+        for j in range(len(k)):
+            amplitudes = np.square(np.abs(blochvectors[j,:,state]))
+            kloc = np.zeros(blochvectors.shape[1]//3)
+            for i in range(len(kloc)):
+                kloc[i] = np.sum(amplitudes[3*i:3*i+3])
+            loc += kloc
+        loc = loc / len(k) # averaging localisation over all k
 
         #plotting
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,15))
