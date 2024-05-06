@@ -39,7 +39,6 @@ every step.
 import numpy as np
 from scipy import linalg as la
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 from matplotlib import cm
 
 from tight_binding.bandstructure import sort_energy_grid, plot_bandstructure2D
@@ -51,18 +50,18 @@ from tight_binding.topology import gauge_fix_grid
 plot = True
 euler = False
 
-num_points = 101
+num_points = 100
 num_steps = 100
-lowest_quasi_energy = -np.pi/2
-r = 2
-c = 2
+lowest_quasi_energy = -np.pi
+r = 1
+c = 1
 
-omega = 9
-dJ1x = -0.2
-dJ1y = 0.2
+omega = 20
+dJ1x = 0
+dJ1y = 0
 dJ2 = 0
-dA = 3
-dC = -3
+dA = 0
+dC = 0
 
 dB = -dA-dC
 J1x = 1+dJ1x
