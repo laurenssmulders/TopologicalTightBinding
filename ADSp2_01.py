@@ -16,7 +16,9 @@ num_steps = 100
 lowest_quasi_energy = -np.pi
 a1 = np.array([1,0])
 a2 = np.array([0,1])
-L = 30
+L = 100
+r=1
+c=1
 
 # The blochvector structures
 print('Generating the blochvector structures...')
@@ -229,7 +231,7 @@ energies, blochvectors = sort_energy_grid(energies,blochvectors)
 
 # plotting
 print('Plotting...')
-plot_bandstructure2D(energies,a1,a2,'test.png',lowest_quasi_energy=lowest_quasi_energy)
+plot_bandstructure2D(energies,a1,a2,'test.png',lowest_quasi_energy=lowest_quasi_energy,r=r,c=c)
 
 # Calculating Zak phases
 vectors = blochvectors[:,0]
@@ -411,9 +413,16 @@ plt.close()
 # Plotting the localisation
 for state in range(energies1.shape[1]):
     loc = np.zeros(blochvectors1.shape[1]//3)
-    amplitudes = np.square(np.abs(blochvectors1[0,:,state])) #localisation at a specific k
-    for i in range(len(loc)):
-        loc[i] = np.sum(amplitudes[3*i:3*i+3])
+    #amplitudes = np.square(np.abs(blochvectors1[0,:,state])) #localisation at a specific k
+    #for i in range(len(loc)):
+        #   loc[i] = np.sum(amplitudes[3*i:3*i+3])
+    for j in range(num_points):
+        amplitudes = np.square(np.abs(blochvectors1[j,:,state]))
+        kloc = np.zeros(blochvectors1.shape[1]//3)
+        for i in range(len(kloc)):
+            kloc[i] = np.sum(amplitudes[3*i:3*i+3])
+        loc += kloc
+    loc = loc / num_points # averaging localisation over all k
 
     #plotting
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,15))
@@ -440,9 +449,16 @@ for state in range(energies1.shape[1]):
 
 for state in range(energies2.shape[1]):
     loc = np.zeros(blochvectors2.shape[1]//3)
-    amplitudes = np.square(np.abs(blochvectors2[0,:,state])) #localisation at a specific k
-    for i in range(len(loc)):
-        loc[i] = np.sum(amplitudes[3*i:3*i+3])
+    #amplitudes = np.square(np.abs(blochvectors2[0,:,state])) #localisation at a specific k
+    #for i in range(len(loc)):
+        #   loc[i] = np.sum(amplitudes[3*i:3*i+3])
+    for j in range(num_points):
+        amplitudes = np.square(np.abs(blochvectors2[j,:,state]))
+        kloc = np.zeros(blochvectors2.shape[1]//3)
+        for i in range(len(kloc)):
+            kloc[i] = np.sum(amplitudes[3*i:3*i+3])
+        loc += kloc
+    loc = loc / num_points # averaging localisation over all k
 
     #plotting
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,15))
