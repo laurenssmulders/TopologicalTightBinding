@@ -16,7 +16,7 @@ num_steps = 100
 lowest_quasi_energy = -np.pi
 a1 = np.array([1,0])
 a2 = np.array([0,1])
-L = 100
+L = 30
 r=1
 c=1
 
@@ -210,6 +210,10 @@ error = np.sum(np.abs(identity - np.matmul(U,np.conjugate(np.transpose(U,(0,1,3,
 if error > 1e-5:
     print('High normalisation error!: {error}'.format(error=error))
 
+# Checking reality of bloch vectors
+error = np.sum(np.abs(np.transpose(U,(0,1,3,2)) - U)) / num_points**2
+print('Reality error: {error}'.format(error=error))
+
 
 # Diagonalising
 print('Diagonalising...')
@@ -339,20 +343,6 @@ energies2 = np.real(1j*np.log(eigenvalues2))
 energies2 = (energies2 + 2*np.pi*np.floor((lowest_quasi_energy-energies2) 
                                                 / (2*np.pi) + 1))
 
-# enforcing reality of the blochvectors
-for k in range(3):
-    for i in range(num_points):
-            phi = 0.5*np.imag(np.log(np.inner(blochvectors1[i,:,k], 
-                                            blochvectors1[i,:,k])))
-            blochvectors1[i,:,k] = np.real(blochvectors1[i,:,k] * np.exp(-1j*phi))
-blochvectors1 = np.real(blochvectors1)
-for k in range(3):
-    for i in range(num_points):
-            phi = 0.5*np.imag(np.log(np.inner(blochvectors2[i,:,k], 
-                                            blochvectors2[i,:,k])))
-            blochvectors2[i,:,k] = np.real(blochvectors2[i,:,k] * np.exp(-1j*phi))
-blochvectors2 = np.real(blochvectors2)
-
 energies1, blochvectors1 = sort_energy_path(energies1,blochvectors1)
 energies2, blochvectors2 = sort_energy_path(energies2,blochvectors2)
 
@@ -361,9 +351,11 @@ print('Plotting the finite structures...')
 b1, b2 = compute_reciprocal_lattice_vectors_2D(a1, a2)
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,15))
 k1 = np.linspace(0,np.linalg.norm(b1), 
-                num_points,False)
+                num_points+1)
 k2 = np.linspace(0,np.linalg.norm(b2), 
-                num_points,False)
+                num_points+1)
+energies1 = np.concatenate((energies1,np.array([energies1[0]])))
+energies2 = np.concatenate((energies2,np.array([energies2[0]])))
 
 top = lowest_quasi_energy + 2 * np.pi
 bottom = lowest_quasi_energy
@@ -408,6 +400,34 @@ ax1.set_title('Cut along the x direction')
 ax2.set_title('Cut along the y direction')
 plt.show()
 plt.close()
+
+# Resorting edge states
+edge_state_1_E = np.concatenate((energies1[:num_points//2,59],energies1[num_points//2:,60]))
+edge_state_2_E = np.concatenate((energies1[:num_points//2,60],energies1[num_points//2:,59]))
+edge_state_1_v = np.concatenate((blochvectors1[:num_points//2,:,59],blochvectors1[num_points//2:,:,60]))
+edge_state_2_v = np.concatenate((blochvectors1[:num_points//2,:,60],blochvectors1[num_points//2:,:,59]))
+energies1[:,59] = edge_state_1_E
+energies1[:,60] = edge_state_2_E
+blochvectors1[:,:,59] = edge_state_1_v
+blochvectors1[:,:,60] = edge_state_2_v
+
+edge_state_1_E = np.concatenate((energies2[:num_points//2,0],energies2[num_points//2:,1]))
+edge_state_2_E = np.concatenate((energies2[:num_points//2,1],energies2[num_points//2:,0]))
+edge_state_1_v = np.concatenate((blochvectors2[:num_points//2,:,0],blochvectors2[num_points//2:,:,1]))
+edge_state_2_v = np.concatenate((blochvectors2[:num_points//2,:,1],blochvectors2[num_points//2:,:,0]))
+energies2[:,0] = edge_state_1_E
+energies2[:,1] = edge_state_2_E
+blochvectors2[:,:,0] = edge_state_1_v
+blochvectors2[:,:,1] = edge_state_2_v
+
+edge_state_1_E = np.concatenate((energies2[:num_points//2,30],energies2[num_points//2:,31]))
+edge_state_2_E = np.concatenate((energies2[:num_points//2,31],energies2[num_points//2:,30]))
+edge_state_1_v = np.concatenate((blochvectors2[:num_points//2,:,30],blochvectors2[num_points//2:,:,31]))
+edge_state_2_v = np.concatenate((blochvectors2[:num_points//2,:,31],blochvectors2[num_points//2:,:,30]))
+energies2[:,30] = edge_state_1_E
+energies2[:,31] = edge_state_2_E
+blochvectors2[:,:,30] = edge_state_1_v
+blochvectors2[:,:,31] = edge_state_2_v
 
 
 # Plotting the localisation
@@ -482,6 +502,9 @@ for state in range(energies2.shape[1]):
     plt.title('Cut along the y direction')
     plt.savefig('edge_state_localisation_a2/edge_state_localisation_{state}'.format(state=state))
     plt.close(fig)
+
+
+
 
 
 
