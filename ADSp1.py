@@ -39,7 +39,6 @@ every step.
 import numpy as np
 from scipy import linalg as la
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 from matplotlib import cm
 
 from tight_binding.bandstructure import sort_energy_grid, plot_bandstructure2D, locate_nodes, sort_energy_path
