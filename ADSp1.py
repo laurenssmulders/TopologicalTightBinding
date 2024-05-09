@@ -85,7 +85,7 @@ bands = [1,2]
 divergence_threshold = 5
 
 # finite
-L = 101
+L = 31
 
 if plot:
     # HAMILTONIAN

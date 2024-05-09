@@ -16,7 +16,7 @@ num_steps = 100
 lowest_quasi_energy = -np.pi
 a1 = np.array([1,0])
 a2 = np.array([0,1])
-L = 30
+L = 101
 r=1
 c=1
 
@@ -402,14 +402,14 @@ plt.show()
 plt.close()
 
 # Resorting edge states
-edge_state_1_E = np.concatenate((energies1[:num_points//2,59],energies1[num_points//2:,60]))
-edge_state_2_E = np.concatenate((energies1[:num_points//2,60],energies1[num_points//2:,59]))
-edge_state_1_v = np.concatenate((blochvectors1[:num_points//2,:,59],blochvectors1[num_points//2:,:,60]))
-edge_state_2_v = np.concatenate((blochvectors1[:num_points//2,:,60],blochvectors1[num_points//2:,:,59]))
-energies1[:,59] = edge_state_1_E
-energies1[:,60] = edge_state_2_E
-blochvectors1[:,:,59] = edge_state_1_v
-blochvectors1[:,:,60] = edge_state_2_v
+edge_state_1_E = np.concatenate((energies1[:num_points//2,201],energies1[num_points//2:,202]))
+edge_state_2_E = np.concatenate((energies1[:num_points//2,202],energies1[num_points//2:,201]))
+edge_state_1_v = np.concatenate((blochvectors1[:num_points//2,:,201],blochvectors1[num_points//2:,:,202]))
+edge_state_2_v = np.concatenate((blochvectors1[:num_points//2,:,202],blochvectors1[num_points//2:,:,201]))
+energies1[:,201] = edge_state_1_E
+energies1[:,202] = edge_state_2_E
+blochvectors1[:,:,201] = edge_state_1_v
+blochvectors1[:,:,202] = edge_state_2_v
 
 edge_state_1_E = np.concatenate((energies2[:num_points//2,0],energies2[num_points//2:,1]))
 edge_state_2_E = np.concatenate((energies2[:num_points//2,1],energies2[num_points//2:,0]))
@@ -420,14 +420,14 @@ energies2[:,1] = edge_state_2_E
 blochvectors2[:,:,0] = edge_state_1_v
 blochvectors2[:,:,1] = edge_state_2_v
 
-edge_state_1_E = np.concatenate((energies2[:num_points//2,30],energies2[num_points//2:,31]))
-edge_state_2_E = np.concatenate((energies2[:num_points//2,31],energies2[num_points//2:,30]))
-edge_state_1_v = np.concatenate((blochvectors2[:num_points//2,:,30],blochvectors2[num_points//2:,:,31]))
-edge_state_2_v = np.concatenate((blochvectors2[:num_points//2,:,31],blochvectors2[num_points//2:,:,30]))
-energies2[:,30] = edge_state_1_E
-energies2[:,31] = edge_state_2_E
-blochvectors2[:,:,30] = edge_state_1_v
-blochvectors2[:,:,31] = edge_state_2_v
+edge_state_1_E = np.concatenate((energies2[:num_points//2,101],energies2[num_points//2:,102]))
+edge_state_2_E = np.concatenate((energies2[:num_points//2,102],energies2[num_points//2:,101]))
+edge_state_1_v = np.concatenate((blochvectors2[:num_points//2,:,101],blochvectors2[num_points//2:,:,102]))
+edge_state_2_v = np.concatenate((blochvectors2[:num_points//2,:,102],blochvectors2[num_points//2:,:,101]))
+energies2[:,101] = edge_state_1_E
+energies2[:,102] = edge_state_2_E
+blochvectors2[:,:,101] = edge_state_1_v
+blochvectors2[:,:,102] = edge_state_2_v
 
 
 # Plotting the localisation
@@ -461,7 +461,7 @@ for state in range(energies1.shape[1]):
     ax1.set_xlim(0, 2*np.pi)
     ax1.set_ylim(lowest_quasi_energy, lowest_quasi_energy + 2*np.pi)
 
-    positions = np.linspace(0,blochvectors1.shape[1] / 3,blochvectors1.shape[1] // 3)
+    positions = np.linspace(0,L-1,L)
     ax2.scatter(positions, loc)
     plt.title('Cut along the x direction')
     plt.savefig('edge_state_localisation_a1/edge_state_localisation_{state}'.format(state=state))
