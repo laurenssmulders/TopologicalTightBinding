@@ -9,13 +9,13 @@ from tight_binding.utilities import compute_reciprocal_lattice_vectors_2D
 
 # parameters
 num_points = 100
-T_cut = 0.83
+T_cut = 0.8
 T = 1
 d1 = -2*np.pi/(3*T)
 d2 = 0
 d3 = 2*np.pi/(3*T)
-N = 1
-num_steps = 1000
+N = 2
+num_steps = 100
 lowest_quasi_energy = -np.pi
 a1 = np.array([1,0])
 a2 = np.array([0,1])
