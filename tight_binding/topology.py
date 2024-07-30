@@ -7,7 +7,7 @@ import scipy.linalg as la
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from .diagonalise import compute_eigenstates
-from .utilities import compute_reciprocal_lattice_vectors_2D, gell_mann
+from .utilities import compute_reciprocal_lattice_vectors_2D, gell_mann, rotate, cross_2D
 from .bandstructure import sort_energy_grid, plot_bandstructure2D
 
 def gauge_fix_path(blochvectors):
@@ -723,9 +723,153 @@ def find_tunnelings(energies,
         
     return J, n1, n2
             
+def dirac_string_rotation(blochvectors,
+                          node_neg,
+                          ds,
+                          rot_vector,
+                          radius,
+                          num_points,
+                          crossing_ds = False,
+                          crossings = np.array([[0,0]]),
+                          directions = np.array([[0,0]])):
+    """Returns blochvectors with a new nodes combined with a dirac string imposed.
+    
+    Parameters
+    ----------
+    blochvectors: 4D array
+        The original bloch vectors to introduce the new nodes for.
+    node_neg: 1D array
+        The location of one of the nodes.
+    ds: 1D array
+        The Dirac string in vector form, from node_neg to the other node
+    rot_vector: int
+        The index of the blochvector to rotate about
+    radius: float
+        The length over which to interpolate the rotation to the trivial case 
+        away from the dirac string
+    num_points: int
+        The number of points in both directions of the blochvector grid
+    crossing_ds: bool=False
+        Whether a dirac string in another gap crossed the dirac string we're
+        forming.
+    crossing: 1D array=[0,0]
+        The point of crossing
+    direction: 1D array=[0,0]
+        The direction of the crossing dirac string
+    
+    Returns
+    -------
+    rotated_blochvectors: 4D array
+        The final blochvectors with the correct rotation.
+    """
+    k = np.linspace(0,1,num_points)
+    kx,ky = np.meshgrid(k,k,indexing='ij')
+    rotation = np.zeros((num_points,num_points,3,3), dtype='float')
 
+    ds_centre = node_neg + 0.5*ds
 
+    for i in range(num_points):
+        for j in range(num_points):
+            k0 = np.array([kx[i,j],ky[i,j]])
+            k1 = np.array([kx[i,j] + 1,ky[i,j]])
+            k2 = np.array([kx[i,j] - 1,ky[i,j]])
+            k3 = np.array([kx[i,j],ky[i,j] + 1])
+            k4 = np.array([kx[i,j] + 1,ky[i,j] + 1])
+            k5 = np.array([kx[i,j] - 1,ky[i,j] + 1])
+            k6 = np.array([kx[i,j],ky[i,j] - 1])
+            k7 = np.array([kx[i,j] + 1,ky[i,j] - 1])
+            k8 = np.array([kx[i,j] - 1,ky[i,j] - 1])
 
+            k_prime_options = np.array([k0-ds_centre, 
+                                        k1-ds_centre, 
+                                        k2-ds_centre, 
+                                        k3-ds_centre, 
+                                        k4-ds_centre, 
+                                        k5-ds_centre, 
+                                        k6-ds_centre, 
+                                        k7-ds_centre, 
+                                        k8-ds_centre])
+            norms = np.zeros((9,),dtype='float')
+            for k in range(9):
+                norms[k] = np.linalg.norm(k_prime_options[k])
+            
+            k_prime = k_prime_options[np.argmin(norms)]
+            sign = 1
+            if crossing_ds:
+                for d in range(crossings.shape[0]):
+                    sign *= np.sign(cross_2D(k_prime-(crossings[d]-ds_centre),directions[d]))
+            
+            # sector I
+            if np.vdot(ds,k_prime) < -0.5*np.vdot(ds,ds):
+                k_prime = k_prime + 0.5*ds
+                if np.linalg.norm(k_prime) > radius:
+                    rotation[i,j] = np.identity(3)
+                else:
+                    cosphi = -cross_2D(ds,k_prime) / (np.linalg.norm(ds)*np.linalg.norm(k_prime))
+                    phi = np.arccos(cosphi)
+                    rotation[i,j] = rotate(sign*(-np.pi/2 + phi)*(1-np.linalg.norm(k_prime)/radius), blochvectors[i,j,:,rot_vector])
+
+            # sector III
+            elif np.vdot(ds,k_prime) > 0.5*np.vdot(ds,ds):
+                k_prime = k_prime - 0.5*ds
+                if np.linalg.norm(k_prime) > radius:
+                    rotation[i,j] = np.identity(3)
+                else:
+                    cosphi = -cross_2D(ds,k_prime) / (np.linalg.norm(ds)*np.linalg.norm(k_prime))
+                    phi = np.arccos(cosphi)
+                    rotation[i,j] = rotate(sign*(-np.pi/2 + phi)*(1-np.linalg.norm(k_prime)/radius), blochvectors[i,j,:,rot_vector])
+
+            # sector II
+            else:
+                r = cross_2D(ds,k_prime) / np.linalg.norm(ds)
+                if abs(r) > radius:
+                    rotation[i,j] = np.identity(3)
+                elif r < 0:
+                    rotation[i,j] = rotate(sign*-np.pi/2*(1+r/radius), blochvectors[i,j,:,rot_vector])
+                else:
+                    rotation[i,j] = rotate(sign*np.pi/2*(1-r/radius), blochvectors[i,j,:,rot_vector])
+
+    rotated_blochvectors = np.matmul(rotation, blochvectors)
+    return rotated_blochvectors
+
+def energy_difference(radius,
+centres,
+                      diff,
+                      num_points):
+    """Finds how much the energies should move towards each other for specific nodes.
+    
+    Parameters
+    ----------
+    radius: float
+        The decay length of the dirac cone
+    centres: 2D array
+        Array of the positions of the nodes
+    diff: float
+        The distance between the two bands
+    num_points: int
+        The number of points in both directions of the blochvector grid
+
+    Returns
+    -------
+    differences: 2D array
+        The difference between old and new energies.
+    """
+    differences = np.zeros((num_points, num_points),dtype='float')
+    k = np.linspace(0,1,num_points)
+    kx, ky = np.meshgrid(k,k,indexing='ij')
+    for i in range(num_points):
+        for j in range(num_points):
+            k = np.array([kx[i,j],ky[i,j]])
+            # finding the closest node
+            distances = np.zeros((centres.shape[0]))
+            for l in range(centres.shape[0]):
+                distance = centres[l] - k
+                for m in range(distance.shape[0]):
+                    options = np.array([distance[m],1-abs(distance[m])])
+                    distance[m] = np.min(np.abs(options))
+                distances[l] = np.linalg.norm(distance)
+            differences[i,j] = diff / 2 * np.exp(-distances[np.argmin(distances)]/radius)
+    return differences
 
 
 

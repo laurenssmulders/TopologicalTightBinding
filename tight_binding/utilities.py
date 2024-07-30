@@ -121,3 +121,7 @@ def rotate(phi,n):
     ])
     R = S @ R_z @ np.transpose(S)
     return R
+
+def cross_2D(v1,v2):
+    """The z component of the cross product of 2D vectors in the (x,y) plane."""
+    return v1[0]*v2[1] - v1[1]*v2[0]
