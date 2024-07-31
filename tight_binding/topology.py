@@ -833,7 +833,7 @@ def dirac_string_rotation(blochvectors,
     return rotated_blochvectors
 
 def energy_difference(radius,
-centres,
+                      centres,
                       diff,
                       num_points):
     """Finds how much the energies should move towards each other for specific nodes.
