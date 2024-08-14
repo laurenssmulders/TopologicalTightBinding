@@ -6,11 +6,11 @@ from tight_binding.topology import energy_difference, gauge_fix_grid
 from tight_binding.bandstructure import plot_bandstructure2D, sort_energy_grid
 
 num_points = 100
-N = 1
+N = 2
 a1 = np.array([1,0])
 a2 = np.array([0,1])
 bands = [0,1]
-divergence_threshold = 0.2
+divergence_threshold = 10
 
 # FINDING THE BLOCHVECTORS
 blochvectors = np.identity(3)
@@ -18,23 +18,44 @@ blochvectors = blochvectors[np.newaxis,np.newaxis,:,:]
 blochvectors = np.repeat(blochvectors, num_points, 0)
 blochvectors = np.repeat(blochvectors, num_points, 1)
 
-blochvectors = dirac_string_rotation(blochvectors, np.array([0.5,0]), np.array([0,1]), 0, 0.5, num_points)
-blochvectors = dirac_string_rotation(blochvectors, np.array([0.25, 0.25]), 
-                                        np.array([0.5, 0]), 2, 0.3, num_points, 
-                                        True, np.array([[0.5,0.25]]), 
-                                        np.array([[0,1]]))
-blochvectors = dirac_string_rotation(blochvectors, np.array([0.25, 0.75]), 
-                                        np.array([0.5, 0]), 2, 0.3, num_points, 
-                                        True, np.array([[0.5,0.75]]), 
-                                        np.array([[0,1]]))
-blochvectors = dirac_string_rotation(blochvectors, np.array([0.5,1]), 
-                                        np.array([0,-1]), 0, 0.2, num_points, 
-                                        True, 
-                                        np.array([[0.5, 0.25],[0.5, 0.75]]), 
-                                        np.array([[1,0], [1,0]]))
+if False:
+    blochvectors = dirac_string_rotation(blochvectors, np.array([0.5,0]), np.array([0,1]), 0, 0.5, num_points)
+    blochvectors = dirac_string_rotation(blochvectors, np.array([0.25, 0.25]), 
+                                            np.array([0.5, 0]), 2, 0.3, num_points, 
+                                            True, np.array([[0.5,0.25]]), 
+                                            np.array([[0,1]]))
+    blochvectors = dirac_string_rotation(blochvectors, np.array([0.25, 0.75]), 
+                                            np.array([0.5, 0]), 2, 0.3, num_points, 
+                                            True, np.array([[0.5,0.75]]), 
+                                            np.array([[0,1]]))
+    blochvectors = dirac_string_rotation(blochvectors, np.array([0.5,1]), 
+                                            np.array([0,-1]), 0, 0.2, num_points, 
+                                            True, 
+                                            np.array([[0.5, 0.25],[0.5, 0.75]]), 
+                                            np.array([[1,0], [1,0]]))
+
+if True:
+    blochvectors = dirac_string_rotation(blochvectors, np.array([0.25, 0.25]), 
+                                            np.array([0.5, 0]), 2, 0.5, num_points)
+    blochvectors = dirac_string_rotation(blochvectors, np.array([0.25, 0.75]), 
+                                            np.array([0.5, 0]), 2, 0.5, num_points)
+    blochvectors = dirac_string_rotation(blochvectors, np.array([0,0]), np.array([0,1]), 0, 0.25, num_points)
+    blochvectors = dirac_string_rotation(blochvectors, np.array([0.5,1]), 
+                                            np.array([0,-1]), 0, 0.25, num_points, 
+                                            True, 
+                                            np.array([[0.5, 0.25],[0.5, 0.75]]), 
+                                            np.array([[1,0], [1,0]]))
+
+if True:
+    k = np.linspace(0,1,num_points,endpoint=False)
+    kx, ky = np.meshgrid(k,k,indexing='ij')
+    u = blochvectors[:,:,2,1]
+    v = blochvectors[:,:,1,1]
+    plt.quiver(kx,ky,u,v, width=0.001)
+    plt.show()
 
 # FINDING THE ENERGIES
-energies = np.array([-1,0,1])
+energies = np.array([-1.,0.,1.])
 energies = energies[np.newaxis,np.newaxis,:]
 energies = np.repeat(energies, num_points, 0)
 energies = np.repeat(energies, num_points, 1)
@@ -44,6 +65,8 @@ differences = energy_difference(0.2, np.array([[0.25,0.25], [0.25, 0.75],
                                              1, num_points)
 energies[:,:,0] = energies[:,:,0] + differences
 energies[:,:,1] = energies[:,:,1] - differences
+
+plot_bandstructure2D(energies, a1, a2, 'test.png', regime='static',r=1,c=1)
 
 # FINDING THE HAMILTONIAN
 diagonal_energies = np.zeros((num_points, num_points, 3, 3), dtype='float')
