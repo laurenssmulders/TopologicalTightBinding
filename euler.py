@@ -5,8 +5,8 @@ from tight_binding.topology import gauge_fix_grid
 
 num_points = 100
 blochvectors = np.load('blochvectors.npy')
-bands = [1,2]
-divergence_threshold = 1.5
+bands = [0,1]
+divergence_threshold = 1.6
 
 # CALCULATING EULER CLASS
 blochvectors = gauge_fix_grid(blochvectors)

@@ -7,7 +7,6 @@ from tight_binding.utilities import compute_reciprocal_lattice_vectors_2D
 J = np.load('J.npy')
 
 num_points = 100
-num_steps = 100
 L = 30
 T = 1
 N = int((J.shape[0] - 1) / 2)
@@ -31,7 +30,7 @@ for m2 in range(L):
                     hamiltonian1[i,3*(m2+n2[l]):3*(m2+n2[l])+3,3*m2:3*m2+3] -= J[k,l]*np.exp(1j*2*np.pi*n1[k]*i/num_points)
 
 # Along a1
-hamiltonian2 = np.zeros((num_steps,num_points,3*L,3*L), dtype='complex')
+hamiltonian2 = np.zeros((num_points,3*L,3*L), dtype='complex')
 for m1 in range(L):
     for j in range(num_points):
         for k in range(2*N+1):
