@@ -432,6 +432,8 @@ def plot_bandstructure2D(energy_grid,
     ax.set_ylabel('$k_y$')
     ax.set_box_aspect([1, 1, 2])
     plt.savefig(save)
+    mng = plt.get_current_fig_manager()
+    mng.full_screen_toggle()
     if show_plot:
         plt.show()
     plt.close()
