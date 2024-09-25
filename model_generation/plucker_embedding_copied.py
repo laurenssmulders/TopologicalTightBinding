@@ -141,6 +141,10 @@ for i in range(2*N+1):
         
 np.save('J.npy', J)
 
+#Reality of hoppings
+imaginary_fraction = np.sum(np.abs(np.imag(J))) / np.sum(np.abs(J))
+print('Imaginary fraction of the hoppings: ', imaginary_fraction)
+
 # GOING BACKWARDS
 # CALCULATING THE HAMILTONIAN
 print('Calculating the hamiltonian backwards...')
