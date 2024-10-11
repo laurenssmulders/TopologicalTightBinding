@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from tight_binding.bandstructure import sort_energy_path
 
 NUM_POINTS = 100
-L = 30
+L = 100
 
 J = np.load('J.npy')
 N = (J.shape[0] - 1 ) // 2
@@ -109,6 +109,13 @@ mng = plt.get_current_fig_manager()
 mng.full_screen_toggle()
 plt.show()
 plt.close()
+
+
+# SAVING THE FINITE STRUCTURES
+np.save('energies1.npy', energies1)
+np.save('blochvectors1.npy', blochvectors1)
+np.save('energies2.npy', energies2)
+np.save('blochvectors2.npy', blochvectors2)
 
 
 
